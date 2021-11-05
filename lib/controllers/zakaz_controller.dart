@@ -27,12 +27,13 @@ class ZakazController extends MapController {
   final orderList = [].obs;
   var olIsEmpty = false.obs;
   int loaderPrice = 0;
-  var currentPage = 1;
+  int currentPage = 1;
 
   @override
   void onInit() {
     super.onInit();
     populateList();
+    listenLocation();
   }
 
   void populateList() async {
@@ -147,6 +148,29 @@ class ZakazController extends MapController {
     return [lat, lng];
   }
 
+  void listenLocation() async {
+    var serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (serviceEnabled) {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.always ||
+          permission == LocationPermission.whileInUse) {
+        cprint('listening to loc');
+        Geolocator.getPositionStream(distanceFilter: 100)
+            .listen((Position position) {
+          var latStr = position.latitude.toString();
+          var lngStr = position.longitude.toString();
+          cprint('stream lat: $latStr, lng: $lngStr');
+        });
+      } else {
+        cprint('permission not enabled 2');
+      }
+    } else {
+      cprint('service not enabled');
+    }
+  }
   /*  @override
   void onClose() {
     super.onClose();

@@ -25,6 +25,23 @@ class _OrderStatusState extends State<OrderStatus> {
   @override
   void initState() {
     super.initState();
+    initMap();
+  }
+
+  void initMap() {
+    zctr.pointsMap.clear();
+    zctr.pointsMap[0] = {
+      'title': 'Текущее положение',
+      'lat': zctr.lastLat,
+      'lng': zctr.lastLng
+    };
+    zctr.pointsMap[1] = {
+      'title': widget.zkz.address,
+      'lat': widget.zkz.lat,
+      'lng': widget.zkz.lng
+    };
+    zctr.createMarkers(showFirst: false);
+    zctr.createPolylines(color: purpleMain);
   }
 
   @override
@@ -156,7 +173,7 @@ class _OrderStatusState extends State<OrderStatus> {
 
   Widget contact() {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
@@ -178,7 +195,7 @@ class _OrderStatusState extends State<OrderStatus> {
   ButtonStyle greyBtn() {
     return TextButton.styleFrom(
         primary: Colors.black,
-        textStyle: TextStyle(fontWeight: FontWeight.normal),
+        textStyle: const TextStyle(fontWeight: FontWeight.normal),
         backgroundColor: greyEb,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6), // <-- Radius
@@ -208,7 +225,9 @@ class _OrderStatusState extends State<OrderStatus> {
     return Column(children: [
       TextButton(
         child: const Text('Выполняется'),
-        onPressed: () {},
+        onPressed: () {
+          zctr.periodic();
+        },
       ),
       timer()
     ]);

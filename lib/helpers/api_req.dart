@@ -6,9 +6,11 @@ import 'package:get/get.dart';
 import '/controllers/zakaz_controller.dart';
 
 //const url = 'http://192.168.0.107:8085/';
-const url = 'http://192.168.88.230:8085/';
+//const ip = '230';
+const ip = '254';
+const url = 'http://192.168.88.' + ip + ':8085/';
 const urlBase = url + 'api/';
-const wsUrl = 'ws://192.168.88.230:2020/ws';
+const wsUrl = 'ws://192.168.88.' + ip + ':2020/ws';
 final ZakazController zctr = Get.find<ZakazController>();
 
 Future<List> getCategories() async {

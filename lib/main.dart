@@ -10,6 +10,7 @@ import 'package:get/get.dart';
 import 'controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
 import 'views/order_list.dart';
+import 'views/socket_test.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     var iniPage = '/list';
     //String iniPage = '/detail';
-    //String iniPage = '/socket';
+    //var iniPage = '/socket';
     return GetMaterialApp(
       title: 'Perevozchik',
       debugShowCheckedModeBanner: false,
@@ -61,11 +62,15 @@ class MyApp extends StatelessWidget {
 }
 
 class Router {
-  static final route = [
+  static final route = <GetPage>[
     GetPage(
       name: '/list',
       page: () => OrderList(),
       //transition: Transition.rightToLeft
+    ),
+    GetPage(
+      name: '/socket',
+      page: () => const SocketTest(title: 'yoba'),
     ),
     /*GetPage(
       name: '/login',
