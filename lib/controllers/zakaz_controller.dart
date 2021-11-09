@@ -1,9 +1,7 @@
 import 'dart:async';
 import 'package:get/get.dart';
-import '/helpers/misc.dart';
 import '../helpers/api_req.dart';
 import 'map_controller.dart';
-import 'package:geolocator/geolocator.dart';
 /* import 'dart:collection';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -18,12 +16,10 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import '/helpers/misc.dart';
 import 'package:flutter/services.dart'; */
 
 class ZakazController extends MapController {
-  double lastLat = 0.0; //_getLastUserLoc(), save user location
-  double lastLng = 0.0;
-  final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
   final orderList = [].obs;
   var olIsEmpty = false.obs;
   int loaderPrice = 0;
@@ -84,93 +80,6 @@ class ZakazController extends MapController {
     }
   }
 
-  Future<List<double>> getLastUserLoc() async {
-    var lat = 0.0, lng = 0.0;
-    if (lastLat != 0.0 && lastLng != 0.0) {
-      lat = lastLat;
-      lng = lastLng;
-    } else {
-      var locList = await getLocation();
-      if (locList.isNotEmpty) {
-        lat = locList[0];
-        lng = locList[1];
-      } else {
-        lat = prefBox.get('lat', defaultValue: 0);
-        lng = prefBox.get('lng', defaultValue: 0);
-      }
-    }
-    return [lat, lng];
-  }
-
-  Future<List> getLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    // Test if location services are enabled.
-    serviceEnabled = await _geolocatorPlatform.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      // Location services are not enabled don't continue
-      // accessing the position and request users of the
-      // App to enable the location services.
-      return Future.error('Location services are disabled.');
-    }
-
-    permission = await _geolocatorPlatform.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await _geolocatorPlatform.requestPermission();
-      if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
-        return Future.error('Location permissions are denied');
-      }
-    }
-
-    if (permission == LocationPermission.deniedForever) {
-      // Permissions are denied forever, handle appropriately.
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
-    }
-
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
-    var ld = await _geolocatorPlatform.getCurrentPosition();
-    var lat = ld.latitude;
-    var lng = ld.longitude;
-    //cprint('lat: $lat, lng: $lng');
-    lastLat = lat;
-    lastLng = lng;
-    //lastLocTime = DateTime.now().millisecondsSinceEpoch;
-    await prefBox.put('lat', lat);
-    await prefBox.put('lng', lng);
-    return [lat, lng];
-  }
-
-  void listenLocation() async {
-    var serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (serviceEnabled) {
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
-      if (permission == LocationPermission.always ||
-          permission == LocationPermission.whileInUse) {
-        cprint('listening to loc');
-        Geolocator.getPositionStream(distanceFilter: 100)
-            .listen((Position position) {
-          var latStr = position.latitude.toString();
-          var lngStr = position.longitude.toString();
-          cprint('stream lat: $latStr, lng: $lngStr');
-        });
-      } else {
-        cprint('permission not enabled 2');
-      }
-    } else {
-      cprint('service not enabled');
-    }
-  }
   /*  @override
   void onClose() {
     super.onClose();

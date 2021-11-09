@@ -25,9 +25,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var iniPage = '/list';
+    //var iniPage = '/list';
     //String iniPage = '/detail';
-    //var iniPage = '/socket';
+    var iniPage = '/socket';
     return GetMaterialApp(
       title: 'Perevozchik',
       debugShowCheckedModeBanner: false,
@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
       getPages: Router.route,
       initialRoute: iniPage,
       initialBinding: BindingsBuilder(() => {
-            Get.put(ZakazController()),
+            //Get.put(ZakazController()),
             //Get.put(MapController()),
             //Get.put(MessageController()),
           }),

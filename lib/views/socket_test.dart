@@ -27,12 +27,24 @@ class _MyHomePageState extends State<SocketTest> {
   ); */
   final _channel = IOWebSocketChannel.connect(wsUrl);
   var iter = 0;
+  Timer? timer;
+  Stream? wstream;
 
   @override
   void initState() {
     super.initState();
     _channel.sink.add(json.encode({'action': 'setId', 'id': 3}));
-    periodic();
+    wstream = _channel.stream;
+    wstream!.listen((v) => cprint('stream listen: $v'));
+    setTimer();
+  }
+
+  void setTimer() {
+    timer = Timer.periodic(const Duration(seconds: 55), (Timer t) => ping());
+  }
+
+  void ping() {
+    _channel.sink.add(json.encode({'action': 'ping', 'id': 3}));
   }
 
   void periodic() {
@@ -111,13 +123,15 @@ class _MyHomePageState extends State<SocketTest> {
       var data = {'action': 'chat', 'text': _controller.text, 'to': 1};
       cprint('sinking $data');
       _channel.sink.add(json.encode(data));
-      //_channel.sink.add(_controller.text);
     }
   }
 
   @override
   void dispose() {
     _channel.sink.close();
+    if (timer != null) {
+      timer!.cancel();
+    }
     super.dispose();
   }
 }

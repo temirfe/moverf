@@ -26,6 +26,12 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Ваше местоположение покажем только текущему заказчику чтобы показать что вы подъезжаете</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Ваше местоположение покажем только текущему заказчику</string>
+  	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+  	<string>Ваше местоположение покажем только текущему заказчику</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
@@ -41,5 +47,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartobservatory._tcp</string>
+	</array>
 </dict>
 </plist>

@@ -8,9 +8,11 @@ import '/controllers/zakaz_controller.dart';
 //const url = 'http://192.168.0.107:8085/';
 //const ip = '230';
 const ip = '254';
-const url = 'http://192.168.88.' + ip + ':8085/';
+//const url = 'http://192.168.88.' + ip + ':8085/';
+const url = 'http://perevozchik.ml/';
 const urlBase = url + 'api/';
-const wsUrl = 'ws://192.168.88.' + ip + ':2020/ws';
+const wsUrl = 'ws://192.168.88.' + ip + '/ws';
+//const wsUrl = 'ws://perevozchik.ml/ws';
 final ZakazController zctr = Get.find<ZakazController>();
 
 Future<List> getCategories() async {
@@ -20,7 +22,7 @@ Future<List> getCategories() async {
     var response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       //cprint('json getCategories decode response is: ${json.decode(response.body)}');
-      //cprint('json getCategories length: ${json.decode(response.body).length}');
+      cprint('json getCategories length: ${json.decode(response.body).length}');
 
       return json.decode(response.body);
     } else {
@@ -136,8 +138,8 @@ Future<List> getCurrentOrders() async {
 Future<List> getOrders() async {
   //var url = urlBase + 'zakazs?ZakazSearch[status]=1';
   var url = urlBase + 'zakazs?page=${zctr.currentPage}';
+  cprint('request getOrders');
   try {
-    //cprint('request getCurrentOrders');
     var response = await http.get(Uri.parse(url), headers: {
       HttpHeaders.authorizationHeader: 'Bearer EPu4KGqTzDbezKepOuy8BVsxESNQy6y7'
     });
