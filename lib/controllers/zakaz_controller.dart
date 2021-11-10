@@ -29,7 +29,6 @@ class ZakazController extends MapController {
   void onInit() {
     super.onInit();
     populateList();
-    listenLocation();
   }
 
   void populateList() async {

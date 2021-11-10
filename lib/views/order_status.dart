@@ -26,6 +26,7 @@ class _OrderStatusState extends State<OrderStatus> {
   void initState() {
     super.initState();
     initMap();
+    zctr.listenLocation();
   }
 
   void initMap() {

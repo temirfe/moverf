@@ -10,11 +10,11 @@ import 'package:web_socket_channel/io.dart';
 import 'misc_controller.dart';
 import '/helpers/api_req.dart';
 import 'dart:ui' as ui;
+import 'dart:convert';
 
 /*
 import 'package:geolocator/geolocator.dart';
 import 'dart:typed_data';
-import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
@@ -47,9 +47,13 @@ class MapController extends MiscController {
   void onInit() {
     super.onInit();
     circleMarker();
-    //_channel = IOWebSocketChannel.connect(wsUrl);
-    //_channel!.sink.add(json.encode({'action': 'setId', 'id': 3}));
     polylinePoints = PolylinePoints();
+    //initWs();
+  }
+
+  void initWs() {
+    _channel = IOWebSocketChannel.connect(wsUrl);
+    _channel!.sink.add(json.encode({'action': 'setId', 'id': 3}));
   }
 
   void periodic() {
@@ -67,11 +71,12 @@ class MapController extends MiscController {
 
   Future<void> updateCurrentPlace(double lat, double lng) async {
     mapPolylines.clear();
-    //cprint('coord $coord');
+    //cprint('coord $lat,$lng');
     pointsMap[0] = {'title': 'Текущее положение', 'lat': lat, 'lng': lng};
     createMarkers(circle: true);
     //await createStraightPolylines();
     await checkCameraLocation();
+    //_channel!.sink.add(json.encode({'action': 'chat', 'text': '$lat,$lng', 'to': 1}));
   }
 
   void sendLoc2() {
@@ -382,11 +387,12 @@ class MapController extends MiscController {
       if (permission == LocationPermission.always ||
           permission == LocationPermission.whileInUse) {
         cprint('listening to loc');
-        Geolocator.getPositionStream(distanceFilter: 100)
+        Geolocator.getPositionStream(distanceFilter: 5)
             .listen((Position position) {
           var lat = position.latitude;
           var lng = position.longitude;
-          cprint('stream lat: $lat, lng: $lng');
+          var ts = Misc.currentTs();
+          cprint('$ts stream lat: $lat, lng: $lng');
           updateCurrentPlace(lat, lng);
         });
       } else {

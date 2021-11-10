@@ -24,6 +24,13 @@ class Zakaz {
   List destinations;
   Map? serviceman; //<string,dynamic>
 
+  static const statusCreated = 1;
+  static const statusAccepted = 2;
+  static const statusApproaching = 3;
+  static const statusInProgress = 4;
+  static const statusCompleted = 5;
+  static const statusCanceled = 10;
+
   /* Zakaz(
       {required this.id,
       required this.address,

@@ -11,8 +11,8 @@ const ip = '254';
 //const url = 'http://192.168.88.' + ip + ':8085/';
 const url = 'http://perevozchik.ml/';
 const urlBase = url + 'api/';
-const wsUrl = 'ws://192.168.88.' + ip + '/ws';
-//const wsUrl = 'ws://perevozchik.ml/ws';
+//const wsUrl = 'ws://192.168.88.' + ip + '/ws';
+const wsUrl = 'ws://perevozchik.ml/ws';
 final ZakazController zctr = Get.find<ZakazController>();
 
 Future<List> getCategories() async {

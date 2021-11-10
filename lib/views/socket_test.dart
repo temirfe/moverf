@@ -28,19 +28,28 @@ class _MyHomePageState extends State<SocketTest> {
   final _channel = IOWebSocketChannel.connect(wsUrl);
   var iter = 0;
   Timer? timer;
-  Stream? wstream;
 
   @override
   void initState() {
     super.initState();
     _channel.sink.add(json.encode({'action': 'setId', 'id': 3}));
-    wstream = _channel.stream;
-    wstream!.listen((v) => cprint('stream listen: $v'));
+    _channel.stream.listen(
+      (dynamic message) {
+        cprint('message $message');
+      },
+      onDone: () {
+        cprint('ws channel closed');
+      },
+      onError: (error) {
+        cprint('ws error $error');
+      },
+    );
+
     setTimer();
   }
 
   void setTimer() {
-    timer = Timer.periodic(const Duration(seconds: 55), (Timer t) => ping());
+    timer = Timer.periodic(const Duration(seconds: 50), (Timer t) => ping());
   }
 
   void ping() {
@@ -78,7 +87,7 @@ class _MyHomePageState extends State<SocketTest> {
               ),
             ),
             const SizedBox(height: 24),
-            StreamBuilder(
+            /* StreamBuilder(
               stream: _channel.stream,
               builder: (context, AsyncSnapshot<dynamic> snapshot) {
                 var txt = '';
@@ -91,7 +100,7 @@ class _MyHomePageState extends State<SocketTest> {
                 }
                 return Text(txt);
               },
-            )
+            ) */
           ],
         ),
       ),
