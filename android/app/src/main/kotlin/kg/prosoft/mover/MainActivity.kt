@@ -1,4 +1,4 @@
-package com.example.mover
+package kg.prosoft.mover
 
 import io.flutter.embedding.android.FlutterActivity
 

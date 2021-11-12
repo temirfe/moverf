@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "470982520603",
+    "project_id": "mover-1f85a",
+    "storage_bucket": "mover-1f85a.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:470982520603:android:bcd834ce6e0fe8a2f52dbe",
+        "android_client_info": {
+          "package_name": "kg.prosoft.mover"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "470982520603-drd78fnc8g97hkuih30jdk42gcpm5lrs.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kg.prosoft.mover",
+            "certificate_hash": "ffba8461df4e8643c7cb04bdec646ed5789b7323"
+          }
+        },
+        {
+          "client_id": "470982520603-sl5jtlnsnu40qbpirvfmdm7f5mrteg7l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDe0gTMF5w5WAfAAhQFRumjr3vxIOMf3BA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "470982520603-sl5jtlnsnu40qbpirvfmdm7f5mrteg7l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

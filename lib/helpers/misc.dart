@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:ansicolor/ansicolor.dart';
 import 'package:hive/hive.dart';
 import 'dart:math' show cos, sqrt, asin;
+import 'package:get/get.dart';
 export 'styles.dart';
 
 var prefBox = Hive.box('sharedPref');
@@ -153,6 +154,25 @@ class Misc {
     }
     val = formatter.format(dt);
     return yestStr + val;
+  }
+
+  static void successAlert(String title, String body) {
+    Get.snackbar(
+      '',
+      '',
+      titleText: Text(
+        title,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      ),
+      messageText: Text(body),
+      icon: const Icon(
+        Icons.check_circle,
+        color: Color(0xff03c4a1),
+      ),
+      shouldIconPulse: false,
+      isDismissible: true,
+      duration: const Duration(seconds: 3),
+    );
   }
 }
 

@@ -5,14 +5,14 @@ import '/helpers/misc.dart';
 
 class MyWid {
   static Widget trailing(bool isChecked) {
-    var icon;
+    Widget icon;
     if (isChecked) {
-      icon = Icon(
+      icon = const Icon(
         Icons.check,
         color: purpleMain,
       );
     } else {
-      icon = Container(width: 0.0, height: 0.0);
+      icon = const SizedBox(width: 0.0, height: 0.0);
     }
     return icon;
   }
@@ -22,10 +22,6 @@ class MyWid {
       onPressed: () {
         onpres();
       },
-      child: Text(
-        txt,
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
       style: ElevatedButton.styleFrom(
           shadowColor: purpleMain,
           elevation: 4,
@@ -33,7 +29,11 @@ class MyWid {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6), // <-- Radius
           ),
-          padding: EdgeInsets.symmetric(vertical: 16)),
+          padding: const EdgeInsets.symmetric(vertical: 16)),
+      child: Text(
+        txt,
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+      ),
     );
   }
 
@@ -41,14 +41,20 @@ class MyWid {
     return SafeArea(
       child: Container(
         width: Get.width,
-        padding: EdgeInsets.all(horizpad),
+        padding: const EdgeInsets.all(horizpad),
         child: elevBtn(txt, onpres),
       ),
     );
   }
 
-  static Widget txtBtn(String txt, Function onpres,
+  static Widget txtBtn(dynamic txt, Function onpres,
       {bool shad = false, bool isLoading = false}) {
+    Widget widg;
+    if (txt is String) {
+      widg = textMy(txt, s: 16, w: FontWeight.w600);
+    } else {
+      widg = txt;
+    }
     var elev = 0.0;
     if (shad) {
       elev = 8;
@@ -70,7 +76,7 @@ class MyWid {
           onPressed: () {
             onpres();
           },
-          child: textMy(txt, s: 16, w: FontWeight.w600),
+          child: widg,
         ),
       ),
     );

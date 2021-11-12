@@ -9,6 +9,9 @@ import 'package:http/http.dart' as http; */
 //import '/helpers/misc.dart';
 
 class BaseController extends GetxController {
+  Map<String, int> xPageCount = {'zakaz': 0, 'page': 0};
+  Map<String, int> xTotalCount = {'zakaz': 0, 'page': 0};
+  Map<String, int> xCurrentPage = {'zakaz': 0, 'page': 0};
   /* @override
   void onInit() {
     super.onInit();
