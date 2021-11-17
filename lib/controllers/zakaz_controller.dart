@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import '../helpers/api_req.dart';
 import 'map_controller.dart';
+import '/helpers/misc.dart';
 /* import 'dart:collection';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -16,7 +17,6 @@ import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import '/helpers/misc.dart';
 import 'package:flutter/services.dart'; */
 
 class ZakazController extends MapController {
@@ -28,11 +28,10 @@ class ZakazController extends MapController {
   @override
   void onInit() {
     super.onInit();
-    populateList();
+    requestCategories();
   }
 
   void populateList() async {
-    await requestCategories();
     await getLocation();
     requestOrders();
   }
@@ -59,9 +58,12 @@ class ZakazController extends MapController {
   Map<int, int> childParent = {};
   Map<int, int> ctgPrice = {};
   Map<int, String> ctgTitles = {};
+  RxList categories = [].obs; //List<Map>
+  RxInt formCtgParId = 0.obs;
+  RxInt formCtgChilId = 0.obs;
 
   Future<void> requestCategories() async {
-    var categories = await getCategories();
+    categories.assignAll(await getCategories());
     for (Map c in categories) {
       ctgTitles[c['id']] = c['title'];
       ctgPrice[c['id']] = c['price'];

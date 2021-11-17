@@ -3,14 +3,21 @@ import 'package:flutter/material.dart';
 //import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mover/models/zakaz_model.dart';
+import 'package:mover/widgets/drawer/drawer.dart';
 import '/helpers/misc.dart';
 import '/controllers/zakaz_controller.dart';
 //import '/helpers/styles.dart';
 import 'order_detail.dart';
 import 'order_status.dart';
 
-class OrderList extends StatelessWidget {
-  OrderList({Key? key}) : super(key: key);
+class OrderList extends StatefulWidget {
+  const OrderList({Key? key}) : super(key: key);
+
+  @override
+  State<OrderList> createState() => _OrderListState();
+}
+
+class _OrderListState extends State<OrderList> {
   final ZakazController zctr = Get.find<ZakazController>();
 
   final scrollMap = {'max': 0.0};
@@ -18,10 +25,17 @@ class OrderList extends StatelessWidget {
   final ctg = 'zakaz';
 
   @override
+  void initState() {
+    super.initState();
+    zctr.populateList();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Открытые заказы'), centerTitle: true),
       backgroundColor: Colors.grey[200],
+      drawer: myDrawer(context, zctr),
       body: myBody(),
     );
   }

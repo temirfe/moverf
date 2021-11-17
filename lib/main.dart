@@ -6,11 +6,13 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
+import 'package:mover/views/profile.dart';
 import '/helpers/misc.dart';
 import 'controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
 import 'views/order_list.dart';
 import 'views/socket_test.dart';
+import 'views/login_view.dart';
 import 'views/test.dart';
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -30,10 +32,13 @@ class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
-    var iniPage = '/test';
-    //var iniPage = '/list';
+    //var iniPage = '/test';
+    var iniPage = '/list';
     //String iniPage = '/detail';
     //var iniPage = '/socket';
+    if (prefBox.get('userId') == null) {
+      iniPage = '/login';
+    }
     return GetMaterialApp(
       title: 'Perevozchik',
       debugShowCheckedModeBanner: false,
@@ -82,11 +87,15 @@ class Router {
       name: '/test',
       page: () => Test(),
     ),
-    /*GetPage(
+    GetPage(
       name: '/login',
       page: () => LoginView(),
     ),
     GetPage(
+      name: '/profile',
+      page: () => const ProfileForm(),
+    ),
+    /* GetPage(
       name: '/filter',
       page: () => FilterView(),
     ), */

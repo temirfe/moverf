@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "470982520603-vl9pu4du6p01ga0kiq9qvfrdsfdc6eg2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "kg.prosoft.mover",
+            "certificate_hash": "d78ba5e5966d720af7e9562f85dcc2f8c6e82e09"
+          }
+        },
+        {
           "client_id": "470982520603-sl5jtlnsnu40qbpirvfmdm7f5mrteg7l.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -37,6 +45,13 @@
             {
               "client_id": "470982520603-sl5jtlnsnu40qbpirvfmdm7f5mrteg7l.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "470982520603-aenevj0mbrceuivkqdh2ttt1f86k8bie.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "kg.prosoft.mover"
+              }
             }
           ]
         }

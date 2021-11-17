@@ -5,14 +5,16 @@ import '/helpers/misc.dart';
 import 'package:get/get.dart';
 import '/controllers/zakaz_controller.dart';
 
-//const url = 'http://192.168.0.107:8085/';
-//const ip = '230';
-const ip = '254';
-//const url = 'http://192.168.88.' + ip + ':8085/';
-const url = 'http://perevozchik.ml/';
+const url = 'http://192.168.0.102:8085/';
+const wsUrl = 'ws://192.168.0.102:8085/ws';
+
+//const url = 'http://192.168.88.230:8085/';
+//const wsUrl = 'ws://192.168.88.230/ws';
+
+//const url = 'http://perevozchik.ml/';
+//const wsUrl = 'ws://perevozchik.ml/ws';
+
 const urlBase = url + 'api/';
-//const wsUrl = 'ws://192.168.88.' + ip + '/ws';
-const wsUrl = 'ws://perevozchik.ml/ws';
 final ZakazController zctr = Get.find<ZakazController>();
 
 Future<List> getCategories() async {
@@ -36,11 +38,12 @@ Future<List> getCategories() async {
 
 Future<Map> postZakaz(Map param) async {
   const url = urlBase + 'zakazs';
+  var authkey = prefBox.get('authKey');
   try {
     //cprint('postZakaz $param');
-    var response = await http.post(Uri.parse(url), body: param, headers: {
-      HttpHeaders.authorizationHeader: 'Bearer EPu4KGqTzDbezKepOuy8BVsxESNQy6y7'
-    });
+    var response = await http.post(Uri.parse(url),
+        body: param,
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
 
     var resp = json.decode(response.body);
     if (response.statusCode == 201) {
@@ -61,44 +64,40 @@ Future<Map> postZakaz(Map param) async {
   return {};
 }
 
-Future<int> postUser(Map param) async {
+Future postUser(Map param) async {
   //await checkConnection();
   // bool internet = await DataConnectionChecker().hasConnection;
   // if (!internet) {
   //   return null;
   // }
   // session.setBool('internet', internet);
-  const url = urlBase + 'sensor/device';
+  const url = urlBase + 'zakaz/auth';
   try {
     //cprint('postUser $param');
     var response = await http.post(Uri.parse(url), body: param);
 
-    if (response.statusCode == 2001) {
-      // cprint('json getCharts decode response is: ${json.decode(response.body)}');
+    cprint('json postUser statusCode: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      cprint('json postUser: ${json.decode(response.body)}');
       var resp = json.decode(response.body);
-      if (resp != null && resp is int && resp != 0) {
+      if (resp != null) {
         return resp;
-      } else {
-        //session.remove('sensorId');
       }
-
       //cprint('json postUser: $resp');
-    } else {
-      cprint('getCharts -get');
     }
   } catch (error) {
     cprint('postUser $error');
   }
-  return 0;
+  return null;
 }
 
 Future<List> getUserAddresses() async {
   const url = urlBase + 'zakaz/address';
+  var authkey = prefBox.get('authKey');
   try {
     //cprint('request getCharts');
-    var response = await http.get(Uri.parse(url), headers: {
-      HttpHeaders.authorizationHeader: 'Bearer EPu4KGqTzDbezKepOuy8BVsxESNQy6y7'
-    });
+    var response = await http.get(Uri.parse(url),
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
     if (response.statusCode == 200) {
       //cprint('json getCategories decode response is: ${json.decode(response.body)}');
       cprint('json getUserAddresses: ${json.decode(response.body)}');
@@ -115,11 +114,11 @@ Future<List> getUserAddresses() async {
 
 Future<List> getCurrentOrders() async {
   const url = urlBase + 'zakaz/inprogress';
+  var authkey = prefBox.get('authKey');
   try {
     //cprint('request getCurrentOrders');
-    var response = await http.get(Uri.parse(url), headers: {
-      HttpHeaders.authorizationHeader: 'Bearer EPu4KGqTzDbezKepOuy8BVsxESNQy6y7'
-    });
+    var response = await http.get(Uri.parse(url),
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
     if (response.statusCode == 200) {
       //cprint('json getCurrentOrders decode response is: ${json.decode(response.body)}');
       cprint(
@@ -139,10 +138,10 @@ Future<List> getOrders() async {
   //var url = urlBase + 'zakazs?ZakazSearch[status]=1';
   var url = urlBase + 'zakazs?page=${zctr.currentPage}';
   cprint('request getOrders');
+  var authkey = prefBox.get('authKey');
   try {
-    var response = await http.get(Uri.parse(url), headers: {
-      HttpHeaders.authorizationHeader: 'Bearer EPu4KGqTzDbezKepOuy8BVsxESNQy6y7'
-    });
+    var response = await http.get(Uri.parse(url),
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
     if (response.statusCode == 200) {
       //cprint('json getCurrentOrders decode response is: ${json.decode(response.body)}');
       cprint('getOrders length: ${json.decode(response.body).length}');
@@ -168,11 +167,12 @@ Future<List> getOrders() async {
 
 Future<int> postAccept(Map param) async {
   const url = urlBase + 'zakaz/accept';
+  var authkey = prefBox.get('authKey');
   try {
     //cprint('postZakaz $param');
-    var response = await http.post(Uri.parse(url), body: param, headers: {
-      HttpHeaders.authorizationHeader: 'Bearer P0or3-vSc_Z_xzLeyQ_0mpiIBtxMQw5x'
-    });
+    var response = await http.post(Uri.parse(url),
+        body: param,
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
 
     var resp = json.decode(response.body);
     if (response.statusCode == 200) {
@@ -188,4 +188,49 @@ Future<int> postAccept(Map param) async {
     cprint('postAccept error: $error');
   }
   return 1;
+}
+
+Future<bool> postServiceman(Map param) async {
+  var authkey = prefBox.get('authKey');
+  const url = urlBase + 'zakaz/serviceman';
+  try {
+    //cprint('postUser $param');
+    var response = await http.post(Uri.parse(url),
+        body: param,
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
+
+    cprint('json postServiceman statusCode: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      cprint('json postServiceman: ${json.decode(response.body)}');
+      var resp = json.decode(response.body);
+      if (resp != null) {
+        return resp;
+      }
+      //cprint('json postUser: $resp');
+    }
+  } catch (error) {
+    cprint('postUser $error');
+  }
+  return false;
+}
+
+Future<Map> getProfile() async {
+  const url = urlBase + 'zakaz/profile';
+  var authkey = prefBox.get('authKey');
+  try {
+    //cprint('request getProfile');
+    var response = await http.get(Uri.parse(url),
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
+    if (response.statusCode == 200) {
+      //cprint('json getCategories decode response is: ${json.decode(response.body)}');
+      //cprint('json getProfile: ${json.decode(response.body)}');
+
+      return json.decode(response.body);
+    } else {
+      cprint('getProfile -error status: ${response.statusCode}');
+    }
+  } catch (error) {
+    cprint('getProfile error: $error');
+  }
+  return {};
 }

@@ -7,12 +7,6 @@ import 'package:get/get.dart';
 export 'styles.dart';
 
 var prefBox = Hive.box('sharedPref');
-void saveAuth(Map<String, dynamic> map) {
-  prefBox.put('userId', map['id']);
-  prefBox.put('username', map['username']);
-  prefBox.put('authKey', map['auth_key']);
-}
-
 //makes print() colorful
 void cprint(String msg) {
   ansiColorDisabled = false;

@@ -9,34 +9,51 @@ class LoginView extends StatelessWidget {
   LoginView({Key? key}) : super(key: key);
   final ZakazController zctr = Get.find<ZakazController>();
   final logo = SizedBox(
-    width: 100,
+    width: 150,
     child: SvgPicture.asset(
       'assets/images/logo.svg',
       alignment: Alignment.center,
     ),
   );
 
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        backgroundColor: Colors.white,
+        body: ListView(
+          children: [
+            const SizedBox(height: 20),
+            codeView(),
+            login(),
+            countdown()
+          ],
+        ));
+  }
+
   Widget login() {
-    if (zctr.phoneField.text == '') {
-      zctr.phoneField.text = '+996';
-      zctr.phoneField.selection =
-          TextSelection.fromPosition(const TextPosition(offset: 4));
-    }
-    return Column(
-      children: [
-        //Text('номер телефона'),
-        logo,
-        const SizedBox(height: 30),
-        Container(
-          // height: 10,
-          // width: double.infinity,
-          margin: const EdgeInsets.only(top: 5.0, left: 20.0, right: 20.0),
-          child: GetX<ZakazController>(builder: (ctr) {
-            String? err;
-            if (ctr.phoneFieldError.value != '') {
-              err = ctr.phoneFieldError.value;
-            }
-            return TextField(
+    return Obx(() {
+      if (zctr.codeView.value) {
+        return const SizedBox();
+      }
+      if (zctr.phoneField.text == '') {
+        zctr.phoneField.text = '+996';
+        zctr.phoneField.selection =
+            TextSelection.fromPosition(const TextPosition(offset: 4));
+      }
+      String? err;
+      if (zctr.phoneFieldError.value != '') {
+        err = zctr.phoneFieldError.value;
+      }
+      return Column(
+        children: [
+          //Text('номер телефона'),
+          logo,
+          const SizedBox(height: 30),
+          Container(
+            // height: 10,
+            // width: double.infinity,
+            margin: const EdgeInsets.only(top: 5.0, left: 20.0, right: 20.0),
+            child: TextField(
               //maxLength: 13,
               //autofocus: true,
               controller: zctr.phoneField,
@@ -50,32 +67,31 @@ class LoginView extends StatelessWidget {
                       BorderSide(color: Colors.yellow[800]!, width: 2.0),
                 ),
               ),
-            );
-          }),
-        ),
-        const SizedBox(height: 40),
-        submitPhoneBtn(),
-        countdown()
-      ],
-    );
+            ),
+          ),
+          const SizedBox(height: 40),
+          submitPhoneBtn(zctr.isPhoneSubmitting.value),
+        ],
+      );
+    });
   }
 
   Widget codeView() {
-    return Column(
-      children: [
-        logo,
-        const SizedBox(height: 30),
-        Container(
-          // height: 10,
-          // width: double.infinity,
-          margin: const EdgeInsets.only(top: 5.0, left: 20.0, right: 20.0),
-          child: GetX<ZakazController>(
-            builder: (ctr) {
-              String? err;
-              if (ctr.codeFieldError.value != '') {
-                err = ctr.codeFieldError.value;
-              }
-              return TextField(
+    return Obx(() {
+      if (zctr.codeView.value) {
+        String? err;
+        if (zctr.codeFieldError.value != '') {
+          err = zctr.codeFieldError.value;
+        }
+        return Column(
+          children: [
+            logo,
+            const SizedBox(height: 30),
+            Container(
+              // height: 10,
+              // width: double.infinity,
+              margin: const EdgeInsets.only(top: 5.0, left: 20.0, right: 20.0),
+              child: TextField(
                 //textAlign: TextAlign.right,
                 autofocus: true,
                 // maxLength: 8,
@@ -95,36 +111,34 @@ class LoginView extends StatelessWidget {
                         BorderSide(color: Colors.yellow[800]!, width: 2.0),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
-        const SizedBox(height: 40),
-        submitSmsBtn(),
-        Container(
-          height: 50,
-          padding: const EdgeInsets.only(top: 20),
-        )
-      ],
-    );
+              ),
+            ),
+            const SizedBox(height: 40),
+            submitSmsBtn(zctr.isSMSverifying.value),
+          ],
+        );
+      }
+
+      return const SizedBox();
+    });
   }
 
-  Widget submitSmsBtn() {
+  Widget submitSmsBtn(bool isLoading) {
     Widget contnt;
     Function onPresd;
-    if (zctr.isSMSverifying.value) {
+    if (isLoading) {
       contnt = const SizedBox(
-        width: 16,
-        height: 16,
+        width: 20,
+        height: 20,
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
           strokeWidth: 2,
         ),
       );
       onPresd = () {};
     } else {
       contnt =
-          const Text('Отправить код', style: TextStyle(color: Colors.black));
+          const Text('Отправить код', style: TextStyle(color: Colors.white));
       onPresd = () {
         sendSms();
       };
@@ -132,21 +146,21 @@ class LoginView extends StatelessWidget {
     return MyWid.txtBtn(contnt, onPresd);
   }
 
-  Widget submitPhoneBtn() {
+  Widget submitPhoneBtn(bool isLoading) {
     Widget contnt;
     Function onPresd;
-    if (zctr.isPhoneSubmitting.value) {
+    if (isLoading) {
       contnt = const SizedBox(
-        width: 16,
-        height: 16,
+        width: 20,
+        height: 20,
         child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
           strokeWidth: 2,
         ),
       );
       onPresd = () {};
     } else {
-      contnt = const Text('Отправить', style: TextStyle(color: Colors.black));
+      contnt = const Text('Отправить', style: TextStyle(color: Colors.white));
       onPresd = () {
         if (zctr.phoneField.text.length < 13) {
           zctr.phoneFieldError.value = 'Заполните поле';
@@ -164,52 +178,27 @@ class LoginView extends StatelessWidget {
 
   void sendSms() {
     var codeText = zctr.codeField.text.trim();
-    // Future.delayed(Duration(seconds: 2), () {
-    //Future<bool> isLoged = mainCtr.signInWithOTP(codeText, mainCtr.verificationId);
     if (zctr.codeField.text.length < 6) {
       zctr.codeFieldError.value = 'Заполните поле';
     } else {
       zctr.codeFieldError.value = '';
     }
-    Future<bool> isLoged = zctr.verifySMS(codeText);
-    isLoged.then((value) {
-      if (value) {
-        //zctr.initem();
-      }
-    });
-    // });
+    zctr.verifySMS(codeText);
   }
 
   Widget countdown() {
     return GetX<ZakazController>(builder: (ctr) {
       Widget time = Text('${zctr.smsTimerValue.value}',
-          style: const TextStyle(color: Colors.grey));
+          style: const TextStyle(color: Colors.grey),
+          textAlign: TextAlign.center);
       if (zctr.smsTimerValue.value == 0) {
-        time = Container();
+        time = const SizedBox();
       }
       return Container(
-          height: 50, padding: const EdgeInsets.only(top: 20), child: time);
+          height: 50,
+          width: double.infinity,
+          padding: const EdgeInsets.only(top: 20),
+          child: time);
     });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(elevation: 0),
-      backgroundColor: Colors.white,
-      body: Obx(() {
-        var list = <Widget>[];
-        if (zctr.codeView.value) {
-          list.add(codeView());
-        } else {
-          list.add(login());
-        }
-
-        return ListView(
-          //mainAxisAlignment: MainAxisAlignment.center,
-          children: list,
-        );
-      }),
-    );
   }
 }

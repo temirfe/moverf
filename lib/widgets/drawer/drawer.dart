@@ -1,27 +1,28 @@
 import 'package:flutter/material.dart';
-//import 'package:get/get.dart';
+import 'package:get/get.dart';
+import '/controllers/zakaz_controller.dart';
 import '/helpers/misc.dart';
 
-Widget myDrawer(BuildContext context) {
+Widget myDrawer(BuildContext context, ZakazController zctr) {
   return Drawer(
     child: Container(
       color: purpleMain,
       child: ListView(
         padding: EdgeInsets.zero,
-        children: _drawerList(context),
+        children: _drawerList(context, zctr),
       ),
     ),
   );
 }
 
-List<Widget> _drawerList(BuildContext context) {
-  List<Widget> list = [
+List<Widget> _drawerList(BuildContext context, ZakazController zctr) {
+  var list = <Widget>[
     _buildHeader(context),
     _createDrawerItem(
         icon: Icons.person_outlined,
-        text: 'Персональные данные',
+        text: 'Профиль',
         onTap: () async {
-          //await Get.offAll(() => PersonalDataScreen());
+          await Get.toNamed('/profile');
         }),
     _createDrawerItem(
         icon: Icons.history_outlined,
@@ -37,17 +38,20 @@ List<Widget> _drawerList(BuildContext context) {
         }),
     _createDrawerItem(icon: Icons.info_outlined, text: 'Помощь'),
     const SizedBox(height: 30),
-    _createDrawerItem(icon: Icons.logout_outlined, text: 'Выход'),
+    _createDrawerItem(
+        icon: Icons.logout_outlined, text: 'Выход', onTap: zctr.signOut),
   ];
   return list;
 }
 
 Widget _buildHeader(BuildContext context) {
-  String name = prefBox.get('name', defaultValue: '');
-  String phone = prefBox.get('phone', defaultValue: '555');
+  var name = prefBox.get('name');
+  name ??= '';
+  var phone = prefBox.get('phone');
+  phone ??= '';
 
   return DrawerHeader(
-    margin: EdgeInsets.only(bottom: 0.0),
+    margin: const EdgeInsets.only(bottom: 0.0),
     child: Material(
       color: Colors.transparent,
       child: InkWell(
@@ -55,9 +59,9 @@ Widget _buildHeader(BuildContext context) {
           children: [
             //h6textWhite(context, name),
             textMy(name, c: Colors.white, s: 16),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             _avatar(),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             textMy(phone, c: Colors.white, s: 16)
           ],
         ),
@@ -74,13 +78,13 @@ Widget _avatar() {
   String imgUrl = prefBox.get('image_url', defaultValue: '');
 
   if (imgUrl != '') {
-    String avatarUrl = '${Endpoints.urlApi}/s_$imgUrl';
+    var avatarUrl = '${Endpoints.urlApi}/s_$imgUrl';
     circleAvatar = CircleAvatar(
       backgroundImage: NetworkImage(avatarUrl),
       radius: 30.0,
     );
   } else {
-    circleAvatar = Icon(
+    circleAvatar = const Icon(
       Icons.account_circle_outlined,
       size: 60,
       color: Colors.white,
@@ -93,7 +97,7 @@ Widget _avatar() {
 Widget _createDrawerItem(
     {required IconData icon, required String text, GestureTapCallback? onTap}) {
   return Material(
-    child: new Ink(
+    child: Ink(
       color: purpleMain,
       child: ListTile(
         dense: true,
@@ -105,10 +109,10 @@ Widget _createDrawerItem(
               size: 25,
             ),
             Padding(
-              padding: EdgeInsets.only(left: 18.0),
+              padding: const EdgeInsets.only(left: 18.0),
               child: Text(
                 text,
-                style: TextStyle(
+                style: const TextStyle(
                   fontWeight: FontWeight.w400,
                   fontSize: 15,
                   color: Colors.white,

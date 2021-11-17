@@ -9,6 +9,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:device_info/device_info.dart';
 import 'package:flutter/services.dart' show PlatformException;
 import '/helpers/misc.dart';
+import '/helpers/alerts.dart';
+import '/helpers/api_req.dart';
+import '/models/profile_model.dart';
 /* 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -22,7 +25,6 @@ class MiscController extends BaseController {
 
   String? smsVerId;
 
-  var isLogedIn = false.obs;
   var isPhoneSubmitting = false.obs;
   var isSMSverifying = false.obs;
   var phoneField = TextEditingController();
@@ -33,45 +35,116 @@ class MiscController extends BaseController {
   Timer? smsTimer;
   var smsTimerValue = 0.obs;
 
+  var profileFormIsDirty = false.obs;
+  Profile? prof;
+  var isSubmittingProfile = false.obs;
+
   @override
   void onInit() {
     super.onInit();
     _onNotif();
+    _getToken();
+    _getDeviceId();
+    downloadProfile();
+  }
+
+  void downloadProfile() async {
+    if (prefBox.get('userId') != null) {
+      var pro = await getProfile();
+      prof = Profile.fromJson(pro);
+      await prefBox.put('name', prof!.user['name']);
+    }
   }
 
   void enterPhone() async {
     isPhoneSubmitting(true);
+    startTimer();
     await FirebaseAuth.instance.verifyPhoneNumber(
-      //phoneNumber: phoneField.text,
-      phoneNumber: '+996702805125',
+      phoneNumber: phoneField.text,
       timeout: const Duration(seconds: 60),
       verificationCompleted: (PhoneAuthCredential credential) {
         cprint('verificationCompleted $credential');
+        userServer();
       },
       verificationFailed: (FirebaseAuthException e) {
         cprint('verificationFailed $e');
+        isPhoneSubmitting(false);
         if (e.code == 'invalid-phone-number') {
           phoneFieldError.value = 'Неправильный формат';
         }
       },
       codeSent: (String vid, int? resendToken) {
         cprint('codeSent $vid, rt: $resendToken');
+        isPhoneSubmitting(false);
         smsVerId = vid;
+        codeView(true);
       },
       codeAutoRetrievalTimeout: (String verificationId) {
         //cprint('codeAutoRetrievalTimeout $verificationId');
       },
     );
-    isPhoneSubmitting(false);
+  }
+
+  void saveAuth(Map<String, dynamic> map) async {
+    await prefBox.put('userId', map['id']);
+    await prefBox.put('name', map['name']);
+    await prefBox.put('phone', phoneField.text);
+    await prefBox.put('authKey', map['auth_key']);
+    downloadProfile();
+  }
+
+  void removeAuth() {
+    prefBox.delete('userId');
+    prefBox.delete('name');
+    prefBox.delete('authKey');
+    prefBox.delete('phone');
+  }
+
+  //SignOut
+  void signOut() async {
+    cprint('signing out');
+    if (authFirebase.isBlank != null && !authFirebase.isBlank!) {
+      cprint('authFirebase signing out');
+      await authFirebase.signOut();
+    } else {
+      cprint('authFirebase is $authFirebase');
+    }
+    codeView(false);
+    phoneField.clear();
+    codeField.clear();
+    removeAuth();
+    await Get.toNamed('/login');
   }
 
   Future<bool> verifySMS(String smsCode) async {
     if (smsVerId != null) {
+      isSMSverifying(true);
       var cred = PhoneAuthProvider.credential(
           verificationId: smsVerId!, smsCode: smsCode);
-      cprint('cred $cred');
-      var ucred = await authFirebase.signInWithCredential(cred);
-      cprint('ucred $ucred');
+      try {
+        var ucred = await authFirebase.signInWithCredential(cred);
+        if (ucred.user != null) {
+          userServer();
+        }
+      } on FirebaseAuthException catch (e) {
+        cprint(' FirebaseAuthException code: ${e.code}');
+        cprint(' FirebaseAuthException message: ${e.message}');
+        /* if (e.code == 'firebase_auth/invalid-verification-code') {
+        errorAlert('Неверный код');
+      } */
+        if (e.code == 'invalid-verification-code') {
+          codeFieldError.value = 'Неверный код';
+          errorAlert('Неверный код');
+        } else {
+          codeFieldError.value = 'Ошибка, попробуйте позднее';
+        }
+        isSMSverifying(false);
+        cprint('$e');
+      } on PlatformException catch (e) {
+        cprint(' PlatformException code: ${e.code}');
+        cprint(' PlatformException message: ${e.message}');
+        isSMSverifying(false);
+      }
     } else {
       cprint('smsVerId is null: $smsVerId');
     }
@@ -128,12 +201,24 @@ class MiscController extends BaseController {
     //return '';
   }
 
-  void userServer() {
-    /* final ApiServices apiClient = ApiServices();
-    Map param = {};
-    param['device_id'] = session.getString('deviceId');
-    param['token'] = session.getString('tokenId');
-    apiClient.postUser(param); //returns user sensor id */
+  void userServer() async {
+    cancelTimer();
+    var res = await postUser({
+      'phone': phoneField.text,
+      'device_id': prefBox.get('deviceId'),
+      'fcm_token': prefBox.get('tokenId')
+    });
+    if (res != null) {
+      cprint('saving user $res');
+      saveAuth(res);
+      if (res['isNew']) {
+        await Get.offNamed('/profile');
+      } else {
+        await Get.offNamed('/list');
+      }
+    } else {
+      cprint('userServer fail $res');
+    }
   }
 
   void startTimer() {
@@ -152,11 +237,16 @@ class MiscController extends BaseController {
     );
   }
 
-  @override
-  void onClose() {
+  void cancelTimer() {
     if (smsTimer != null) {
+      smsTimerValue.value = 0;
       smsTimer!.cancel();
     }
+  }
+
+  @override
+  void onClose() {
+    cancelTimer();
     super.onClose();
   }
 }
