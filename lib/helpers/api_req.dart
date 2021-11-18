@@ -214,7 +214,7 @@ Future<bool> postServiceman(Map param) async {
   return false;
 }
 
-Future<Map> getProfile() async {
+Future getProfile() async {
   const url = urlBase + 'zakaz/profile';
   var authkey = prefBox.get('authKey');
   try {
@@ -223,8 +223,6 @@ Future<Map> getProfile() async {
         headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
     if (response.statusCode == 200) {
       //cprint('json getCategories decode response is: ${json.decode(response.body)}');
-      //cprint('json getProfile: ${json.decode(response.body)}');
-
       return json.decode(response.body);
     } else {
       cprint('getProfile -error status: ${response.statusCode}');
@@ -232,5 +230,5 @@ Future<Map> getProfile() async {
   } catch (error) {
     cprint('getProfile error: $error');
   }
-  return {};
+  return null;
 }

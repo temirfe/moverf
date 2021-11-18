@@ -27,8 +27,24 @@ class MyMap {
       cprint('gmapGet build gmap');
 
       var pllne = Set<Polyline>.of(zctr.mapPolylines.values);
+      //return fmap(pllne);
       return gmap(pllne);
     });
+  }
+
+  Widget fmap(Set<Polyline> pllne) {
+    return FutureBuilder(
+        future: Future.delayed(
+            const Duration(
+              milliseconds: 300,
+            ),
+            () => gmap(pllne)),
+        builder: (BuildContext context, AsyncSnapshot<GoogleMap> snap) {
+          if (snap.hasData) {
+            return snap.data!;
+          }
+          return const SizedBox();
+        });
   }
 
   GoogleMap gmap(Set<Polyline> pllne) {

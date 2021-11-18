@@ -25,7 +25,6 @@ class MiscController extends BaseController {
 
   String? smsVerId;
 
-  var isPhoneSubmitting = false.obs;
   var isSMSverifying = false.obs;
   var phoneField = TextEditingController();
   var codeField = TextEditingController();
@@ -51,14 +50,16 @@ class MiscController extends BaseController {
   void downloadProfile() async {
     if (prefBox.get('userId') != null) {
       var pro = await getProfile();
-      prof = Profile.fromJson(pro);
-      await prefBox.put('name', prof!.user['name']);
+      if (pro != null) {
+        prof = Profile.fromJson(pro);
+        await prefBox.put('name', prof!.user['name']);
+      }
     }
   }
 
   void enterPhone() async {
-    isPhoneSubmitting(true);
     startTimer();
+    codeView(true);
     await FirebaseAuth.instance.verifyPhoneNumber(
       phoneNumber: phoneField.text,
       timeout: const Duration(seconds: 60),
@@ -68,18 +69,17 @@ class MiscController extends BaseController {
       },
       verificationFailed: (FirebaseAuthException e) {
         cprint('verificationFailed $e');
-        isPhoneSubmitting(false);
         if (e.code == 'invalid-phone-number') {
           phoneFieldError.value = 'Неправильный формат';
         }
+        codeView(false);
       },
       codeSent: (String vid, int? resendToken) {
         cprint('codeSent $vid, rt: $resendToken');
-        isPhoneSubmitting(false);
         smsVerId = vid;
-        codeView(true);
       },
       codeAutoRetrievalTimeout: (String verificationId) {
+        codeView(false);
         //cprint('codeAutoRetrievalTimeout $verificationId');
       },
     );
@@ -211,7 +211,7 @@ class MiscController extends BaseController {
     if (res != null) {
       cprint('saving user $res');
       saveAuth(res);
-      if (res['isNew']) {
+      if (res['is_new']) {
         await Get.offNamed('/profile');
       } else {
         await Get.offNamed('/list');
@@ -229,7 +229,6 @@ class MiscController extends BaseController {
       (Timer timer) {
         if (smsTimerValue.value == 0) {
           timer.cancel();
-          isPhoneSubmitting(false);
         } else {
           smsTimerValue.value--;
         }

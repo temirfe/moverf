@@ -5,25 +5,23 @@ import '/helpers/styles.dart';
 import '/helpers/misc.dart';
 
 void errorAlert(message) {
-  Get.snackbar(
-    '',
-    '',
-    titleText: const SizedBox(
-      height: 0,
-      width: 0,
-    ),
-    messageText: Text(
-      message.toString(),
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-    ),
-    icon: const Icon(
-      Icons.error,
-      color: Color(0xffd00000),
-    ),
-    shouldIconPulse: true,
-    isDismissible: true,
-    duration: const Duration(seconds: 3),
-  );
+  Get.snackbar('', '',
+      titleText: const SizedBox(
+        height: 0,
+        width: 0,
+      ),
+      messageText: Text(
+        message.toString(),
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+      ),
+      icon: const Icon(
+        Icons.error,
+        color: Color(0xffd00000),
+      ),
+      shouldIconPulse: true,
+      isDismissible: true,
+      duration: const Duration(seconds: 3),
+      backgroundColor: Colors.yellow);
 }
 
 void successAlert(String message) {

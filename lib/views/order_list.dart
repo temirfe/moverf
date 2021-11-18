@@ -98,8 +98,8 @@ class _OrderListState extends State<OrderList> {
 
     return InkWell(
       onTap: () {
-        //Get.to(OrderDetail(zakaz));
-        Get.to(OrderStatus(zakaz));
+        Get.to(OrderDetail(zakaz));
+        //Get.to(OrderStatus(zakaz));
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),

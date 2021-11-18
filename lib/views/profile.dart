@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:mover/helpers/alerts.dart';
 import 'package:mover/helpers/api_req.dart';
 import '/controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
@@ -92,7 +93,7 @@ class _ProfileFormState extends State<ProfileForm> {
       textCapitalization: TextCapitalization.sentences,
       //textInputAction: TextInputAction.done,
       decoration:
-          const InputDecoration(hintText: 'Имя', border: OutlineInputBorder()),
+          const InputDecoration(labelText: 'Имя', border: OutlineInputBorder()),
       validator: (value) {
         if (value == null || value.isEmpty) {
           return 'Напишите имя';
@@ -153,7 +154,7 @@ class _ProfileFormState extends State<ProfileForm> {
       keyboardType: TextInputType.text,
       textInputAction: TextInputAction.next,
       decoration: const InputDecoration(
-          hintText: 'Марка и модель', border: OutlineInputBorder()),
+          labelText: 'Марка и модель', border: OutlineInputBorder()),
       validator: (value) {
         if (zctr.formCtgParId.value != 5 && (value == null || value.isEmpty)) {
           return 'Поле не должно быть пустым';
@@ -174,8 +175,8 @@ class _ProfileFormState extends State<ProfileForm> {
       //focusNode: myFocusNode,
       keyboardType: TextInputType.text,
       //textInputAction: TextInputAction.done,
-      decoration:
-          const InputDecoration(hintText: 'Цвет', border: OutlineInputBorder()),
+      decoration: const InputDecoration(
+          labelText: 'Цвет', border: OutlineInputBorder()),
       validator: (value) {
         if (zctr.formCtgParId.value != 5 && (value == null || value.isEmpty)) {
           return 'Поле не должно быть пустым';
@@ -312,7 +313,8 @@ class _ProfileFormState extends State<ProfileForm> {
           zctr.isSubmittingProfile(false);
           if (res) {
             zctr.profileFormIsDirty(false);
-            Get.snackbar('Сохранено', '');
+            successAlert('Сохранено');
+            zctr.downloadProfile();
           }
         }
       }

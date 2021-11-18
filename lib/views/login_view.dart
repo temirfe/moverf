@@ -70,7 +70,7 @@ class LoginView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 40),
-          submitPhoneBtn(zctr.isPhoneSubmitting.value),
+          submitPhoneBtn(),
         ],
       );
     });
@@ -146,32 +146,16 @@ class LoginView extends StatelessWidget {
     return MyWid.txtBtn(contnt, onPresd);
   }
 
-  Widget submitPhoneBtn(bool isLoading) {
-    Widget contnt;
-    Function onPresd;
-    if (isLoading) {
-      contnt = const SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          strokeWidth: 2,
-        ),
-      );
-      onPresd = () {};
-    } else {
-      contnt = const Text('Отправить', style: TextStyle(color: Colors.white));
-      onPresd = () {
-        if (zctr.phoneField.text.length < 13) {
-          zctr.phoneFieldError.value = 'Заполните поле';
-        } else {
-          zctr.phoneFieldError.value = '';
-          zctr.enterPhone();
-        }
-      };
-    }
-
-    return MyWid.txtBtn(contnt, onPresd);
+  Widget submitPhoneBtn() {
+    return MyWid.txtBtn(
+        const Text('Отправить', style: TextStyle(color: Colors.white)), () {
+      if (zctr.phoneField.text.length < 13) {
+        zctr.phoneFieldError.value = 'Заполните поле';
+      } else {
+        zctr.phoneFieldError.value = '';
+        zctr.enterPhone();
+      }
+    });
   }
 
 //codeView

@@ -76,7 +76,7 @@ class Router {
   static final route = <GetPage>[
     GetPage(
       name: '/list',
-      page: () => OrderList(),
+      page: () => const OrderList(),
       //transition: Transition.rightToLeft
     ),
     GetPage(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 //import 'package:hive/hive.dart';
 //import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
+import 'package:mover/helpers/alerts.dart';
 import 'package:mover/models/zakaz_model.dart';
 import '/helpers/misc.dart';
 import '/controllers/zakaz_controller.dart';
@@ -174,13 +175,20 @@ class _OrderDetailState extends State<OrderDetail> {
   }
 
   Widget _acceptBtn() {
-    return Obx(() {
-      return Container(
-        child: MyWid.txtBtn('Принять', () async {
-          var res = await zctr
-              .acceptOrder({'id': widget.zkz.id, 'zctg_id': widget.zkz.ctgId});
-        }, shad: true),
-      );
-    });
+    return Container(
+      child: MyWid.txtBtn('Принять', () async {
+        if (zctr.prof == null) {
+          errorAlert('Заполните профиль');
+        } else {
+          var res = await zctr.acceptOrder({
+            'id': widget.zkz.id.toString(),
+            'zctg_id': widget.zkz.ctgId.toString()
+          });
+          cprint('_acceptBtn res $res');
+        }
+      }, shad: true),
+    );
+    /* return Obx(() {
+    }); */
   }
 }
