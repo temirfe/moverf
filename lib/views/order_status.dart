@@ -6,7 +6,10 @@ import 'package:mover/models/zakaz_model.dart';
 import '/helpers/misc.dart';
 import '/controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
+import '/helpers/alerts.dart';
 import '/widgets/map.dart';
+import '/widgets/my_widgets.dart';
+import '../helpers/api_req.dart';
 
 class OrderStatus extends StatefulWidget {
   const OrderStatus(this.zkz, {Key? key}) : super(key: key);
@@ -25,8 +28,8 @@ class _OrderStatusState extends State<OrderStatus> {
   @override
   void initState() {
     super.initState();
-    initMap();
-    zctr.listenLocation();
+    //initMap();
+    //zctr.listenLocation();
   }
 
   void initMap() {
@@ -58,7 +61,8 @@ class _OrderStatusState extends State<OrderStatus> {
       children: [
         SizedBox(
           height: Get.height * 0.9,
-          child: mymap.gmapX(),
+          //child: mymap.gmapX(),
+          child: const SizedBox(),
           //color: Colors.grey,
         ),
         dss()
@@ -88,7 +92,7 @@ class _OrderStatusState extends State<OrderStatus> {
     return DraggableScrollableSheet(
         initialChildSize: .3,
         minChildSize: .12,
-        maxChildSize: .4,
+        maxChildSize: .8,
         builder: (BuildContext context, ScrollController scrollController) {
           return scrollViewContent(scrollController);
         });
@@ -143,33 +147,31 @@ class _OrderStatusState extends State<OrderStatus> {
       ),
       const Divider(height: 8),
       statuses(),
+      actionBtn(),
       const Divider(height: 8),
       contact(),
-      TextButton(
-        child: const Text('Отменить заказ',
-            style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.normal,
-                color: Colors.grey)),
-        onPressed: () {},
-      )
+      cancelBtn()
     ];
 
     return list;
   }
 
   Widget statuses() {
-    return Container(
-      padding: const EdgeInsets.only(left: 16, top: 0, bottom: 10, right: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          accepted(),
-          startBtn(),
-          doneBtn(),
-        ],
-      ),
-    );
+    return Obx(() {
+      var statId = widget.zkz.statusId;
+      if (zctr.statusMap.containsKey(widget.zkz.id)) {
+        statId = zctr.statusMap[widget.zkz.id]!;
+      }
+
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Row(children: [
+          txt2('Статус:'),
+          const SizedBox(width: 16),
+          Text(Zakaz.statusStr(statId))
+        ]),
+      );
+    });
   }
 
   Widget contact() {
@@ -212,36 +214,144 @@ class _OrderStatusState extends State<OrderStatus> {
     );
   }
 
-  Widget accepted() {
-    return Column(children: [
-      const TextButton(
-        onPressed: null,
-        child: Text('Принято'),
-      ),
-      timer()
-    ]);
+  Widget actionBtn() {
+    return Obx(() {
+      Widget ret = const SizedBox();
+
+      var statId = widget.zkz.statusId;
+      if (zctr.statusMap.containsKey(widget.zkz.id)) {
+        statId = zctr.statusMap[widget.zkz.id]!;
+      }
+
+      switch (statId) {
+        case Zakaz.statusAccepted:
+          {
+            ret = approachBtn();
+          }
+          break;
+        case Zakaz.statusApproaching:
+          {
+            ret = startBtn();
+          }
+          break;
+        case Zakaz.statusInProgress:
+          {
+            ret = doneBtn();
+          }
+          break;
+      }
+      return ret;
+    });
+  }
+
+  Widget approachBtn() {
+    void onPresd() async {
+      //zctr.periodic();
+      var res = await postAction('approach', {
+        'id': widget.zkz.id.toString(),
+        'zctg_id': widget.zkz.ctgId.toString()
+      });
+      if (res is int && res == 0) {
+        //await Get.off(OrderStatus(widget.zkz));
+      } else {
+        errorAlert('Произошла ошибка');
+      }
+    }
+
+    return MyWid.txtBtn(const Text('Выезжаю'), onPresd, safearea: false);
   }
 
   Widget startBtn() {
-    return Column(children: [
-      TextButton(
-        child: const Text('Выполняется'),
-        onPressed: () {
-          zctr.periodic();
-        },
-      ),
-      timer()
-    ]);
+    return Obx(() {
+      Widget contnt = const Text('Начать отчёт времени');
+      Function onPresd = () async {
+        //zctr.periodic();
+        zctr.isLoadingMap['start'] = true;
+        var res = await postAction('start', {
+          'id': widget.zkz.id.toString(),
+          'zctg_id': widget.zkz.ctgId.toString()
+        });
+        if (res is int && res == 0) {
+          zctr.statusMap[widget.zkz.id] = Zakaz.statusInProgress;
+          widget.zkz.ctgId = Zakaz.statusInProgress;
+          widget.zkz.start = Misc.currentTs();
+        } else {
+          errorAlert('Произошла ошибка');
+          zctr.isLoadingMap['start'] = false;
+        }
+      };
+
+      if (zctr.isLoadingMap.containsKey('start') &&
+          zctr.isLoadingMap['start']!) {
+        contnt = MyWid.loading();
+        onPresd = () {};
+      }
+      return MyWid.txtBtn(contnt, onPresd, safearea: false);
+    });
   }
 
   Widget doneBtn() {
-    return Column(children: [
-      TextButton(
-        child: const Text('Завершено'),
-        onPressed: () {},
-      ),
-      timer()
-    ]);
+    return Obx(() {
+      Widget contnt = const Text('Завершить');
+      Function onPresd = () async {
+        //zctr.periodic();
+        zctr.isLoadingMap['finish'] = true;
+        var res = await postAction('finish', {
+          'id': widget.zkz.id.toString(),
+          'zctg_id': widget.zkz.ctgId.toString()
+        });
+        if (res is int && res == 0) {
+          zctr.statusMap[widget.zkz.id] = Zakaz.statusCompleted;
+          widget.zkz.ctgId = Zakaz.statusCompleted;
+          widget.zkz.finish = Misc.currentTs();
+        } else {
+          errorAlert('Произошла ошибка');
+          zctr.isLoadingMap['finish'] = false;
+        }
+      };
+
+      if (zctr.isLoadingMap.containsKey('finish') &&
+          zctr.isLoadingMap['finish']!) {
+        contnt = MyWid.loading();
+        onPresd = () {};
+      }
+      return MyWid.txtBtn(contnt, onPresd, safearea: false);
+    });
+  }
+
+  Widget doneBtn2() {
+    void onPresd() async {
+      var res = await postAction('finish', {
+        'id': widget.zkz.id.toString(),
+        'zctg_id': widget.zkz.ctgId.toString()
+      });
+      if (res is int && res == 0) {
+        //await Get.off(OrderStatus(widget.zkz));
+      } else {
+        errorAlert('Произошла ошибка');
+      }
+    }
+
+    return MyWid.txtBtn(const Text('Завершить'), onPresd, safearea: false);
+  }
+
+  Widget cancelBtn() {
+    return TextButton(
+      child: const Text('Отменить заказ',
+          style: TextStyle(
+              fontSize: 12, fontWeight: FontWeight.normal, color: Colors.grey)),
+      onPressed: () async {
+        var res = await postAction('cancel', {
+          'id': widget.zkz.id.toString(),
+          'zctg_id': widget.zkz.ctgId.toString()
+        });
+        if (res is int && res == 0) {
+          //await Get.off(OrderStatus(widget.zkz));
+        } else {
+          errorAlert('Произошла ошибка');
+        }
+      },
+    );
   }
 
   Widget timer() {

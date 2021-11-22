@@ -28,7 +28,7 @@ List<Widget> _drawerList(BuildContext context, ZakazController zctr) {
         icon: Icons.history_outlined,
         text: 'Мои заказы',
         onTap: () async {
-          //await Get.to(DetailPage(zctr.));
+          await Get.toNamed('/myorders');
         }),
     _createDrawerItem(
         icon: Icons.credit_card_outlined,

@@ -21,9 +21,14 @@ import 'package:flutter/services.dart'; */
 
 class ZakazController extends MapController {
   final orderList = [].obs;
+  final myOrderList = [].obs;
   var olIsEmpty = false.obs;
+  var myOlIsEmpty = false.obs;
   int loaderPrice = 0;
   int currentPage = 1;
+  int currentPageMy = 1;
+  var isLoadingMap = <String, bool>{}.obs;
+  var statusMap = <int, int>{}.obs;
 
   @override
   void onInit() {
@@ -34,6 +39,7 @@ class ZakazController extends MapController {
   void populateList() async {
     await getLocation();
     requestOrders();
+    requestMyOrders();
   }
 
   void requestOrders() async {
@@ -50,8 +56,18 @@ class ZakazController extends MapController {
     }
   }
 
-  Future<int> acceptOrder(Map param) async {
-    return await postAccept(param);
+  void requestMyOrders() async {
+    var ctg = 'myOrders';
+    if (xCurrentPage[ctg] != 0 && currentPageMy < xPageCount[ctg]!) {
+      currentPageMy = (xCurrentPage[ctg]! + 1);
+    }
+
+    var list = await getOrders(params: 'p=true');
+    if (list.isNotEmpty) {
+      myOrderList.addAll(list);
+    } else {
+      myOlIsEmpty.value = true;
+    }
   }
 
   Map<int, List<int>> parentChild = {};
@@ -80,6 +96,10 @@ class ZakazController extends MapController {
       }
     }
   }
+
+  /* Future<int> orderAction(String action, Map param) async {
+    return await postAction(action, param);
+  } */
 
   /*  @override
   void onClose() {

@@ -11,6 +11,7 @@ import '/helpers/misc.dart';
 import 'controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
 import 'views/order_list.dart';
+import 'views/my_order_list.dart';
 import 'views/socket_test.dart';
 import 'views/login_view.dart';
 import 'views/test.dart';
@@ -77,6 +78,11 @@ class Router {
     GetPage(
       name: '/list',
       page: () => const OrderList(),
+      //transition: Transition.rightToLeft
+    ),
+    GetPage(
+      name: '/myorders',
+      page: () => const MyOrderList(),
       //transition: Transition.rightToLeft
     ),
     GetPage(

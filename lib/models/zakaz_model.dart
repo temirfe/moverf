@@ -31,22 +31,6 @@ class Zakaz {
   static const statusCompleted = 5;
   static const statusCanceled = 10;
 
-  /* Zakaz(
-      {required this.id,
-      required this.address,
-      required this.phone,
-      required this.lat,
-      required this.lng,
-      required this.note,
-      required this.statusId,
-      required this.shouldStart,
-      this.start,
-      this.finish,
-      this.duration,
-      required this.userId,
-      required this.ctgId,
-      required this.destinations}); */
-
   Zakaz.fromJson(Map<String, dynamic> json)
       : id = json['id'],
         address = json['address'],
@@ -66,18 +50,33 @@ class Zakaz {
         destinations = json['destinations'],
         serviceman = json['serviceman'];
 
-  // Map<String, dynamic> toJson(){
-  //   final Map<String, dynamic> data = new Map<String, dynamic>();
-  //   data['name'] = this.name;
-  //   return data;
-  // }
-  /* set setNote(String val) {
-    note = val;
-  } 
-  int get tel {
-    return phone;
+  String get status {
+    return statusStr(statusId);
   }
-  */
+
+  static String statusStr(int sid) {
+    var ret = '';
+    switch (sid) {
+      case statusCreated:
+        ret = 'Принято';
+        break;
+      case statusApproaching:
+        ret = 'В пути';
+        break;
+      case statusInProgress:
+        ret = 'Выполняется';
+        break;
+      case statusCompleted:
+        ret = 'Завершено';
+        break;
+      case statusCanceled:
+        ret = 'Отменено';
+        break;
+      default:
+        ret = 'Создано';
+    }
+    return ret;
+  }
 
   String get startDate {
     return Misc.dateStr2(Misc.dateFromTs(shouldStart));

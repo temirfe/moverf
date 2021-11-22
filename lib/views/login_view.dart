@@ -127,14 +127,7 @@ class LoginView extends StatelessWidget {
     Widget contnt;
     Function onPresd;
     if (isLoading) {
-      contnt = const SizedBox(
-        width: 20,
-        height: 20,
-        child: CircularProgressIndicator(
-          valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-          strokeWidth: 2,
-        ),
-      );
+      contnt = MyWid.loading();
       onPresd = () {};
     } else {
       contnt =

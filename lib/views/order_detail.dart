@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:mover/helpers/alerts.dart';
 import 'package:mover/models/zakaz_model.dart';
+import 'package:mover/views/order_status.dart';
 import '/helpers/misc.dart';
 import '/controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
 import '/widgets/map.dart';
 import '/widgets/my_widgets.dart';
+import '../helpers/api_req.dart';
 
 class OrderDetail extends StatefulWidget {
   const OrderDetail(this.zkz, {Key? key}) : super(key: key);
@@ -180,11 +182,16 @@ class _OrderDetailState extends State<OrderDetail> {
         if (zctr.prof == null) {
           errorAlert('Заполните профиль');
         } else {
-          var res = await zctr.acceptOrder({
+          var res = await postAction('accept', {
             'id': widget.zkz.id.toString(),
             'zctg_id': widget.zkz.ctgId.toString()
           });
-          cprint('_acceptBtn res $res');
+          if (res == 0) {
+            errorAlert('Произошла ошибка');
+          } else {
+            widget.zkz.statusId = res;
+            await Get.off(OrderStatus(widget.zkz));
+          }
         }
       }, shad: true),
     );

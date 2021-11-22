@@ -5,11 +5,11 @@ import '/helpers/misc.dart';
 import 'package:get/get.dart';
 import '/controllers/zakaz_controller.dart';
 
-const url = 'http://192.168.0.102:8085/';
-const wsUrl = 'ws://192.168.0.102:8085/ws';
+//const url = 'http://192.168.0.102:8085/';
+//const wsUrl = 'ws://192.168.0.102:8085/ws';
 
-//const url = 'http://192.168.88.230:8085/';
-//const wsUrl = 'ws://192.168.88.230/ws';
+const url = 'http://192.168.88.230:8085/';
+const wsUrl = 'ws://192.168.88.230/ws';
 
 //const url = 'http://perevozchik.ml/';
 //const wsUrl = 'ws://perevozchik.ml/ws';
@@ -134,17 +134,19 @@ Future<List> getCurrentOrders() async {
   return [];
 }
 
-Future<List> getOrders() async {
-  //var url = urlBase + 'zakazs?ZakazSearch[status]=1';
+Future<List> getOrders({String params = ''}) async {
   var url = urlBase + 'zakazs?page=${zctr.currentPage}';
-  cprint('request getOrders');
+  if (params != '') {
+    url += '&$params';
+  }
+  //cprint('request getOrders');
   var authkey = prefBox.get('authKey');
   try {
     var response = await http.get(Uri.parse(url),
         headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
     if (response.statusCode == 200) {
       //cprint('json getCurrentOrders decode response is: ${json.decode(response.body)}');
-      cprint('getOrders length: ${json.decode(response.body).length}');
+      cprint('getOrders $params length: ${json.decode(response.body).length}');
       response.headers.forEach((name, values) {
         if (name == 'x-pagination-page-count') {
           zctr.xPageCount['zakaz'] = int.parse(values[0]);
@@ -163,31 +165,6 @@ Future<List> getOrders() async {
     cprint('getOrders error: $error');
   }
   return [];
-}
-
-Future<int> postAccept(Map param) async {
-  const url = urlBase + 'zakaz/accept';
-  var authkey = prefBox.get('authKey');
-  try {
-    //cprint('postZakaz $param');
-    var response = await http.post(Uri.parse(url),
-        body: param,
-        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
-
-    var resp = json.decode(response.body);
-    if (response.statusCode == 200) {
-      cprint('json postAccept decode response is: $resp');
-
-      return resp;
-
-      //cprint('json postUser: $resp');
-    } else {
-      cprint('postAccept -error status: ${response.statusCode}, body: $resp');
-    }
-  } catch (error) {
-    cprint('postAccept error: $error');
-  }
-  return 1;
 }
 
 Future<bool> postServiceman(Map param) async {
@@ -231,4 +208,29 @@ Future getProfile() async {
     cprint('getProfile error: $error');
   }
   return null;
+}
+
+Future<int> postAction(String action, Map param) async {
+  var url = urlBase + 'zakaz/$action';
+  var authkey = prefBox.get('authKey');
+  try {
+    //cprint('postAction $param');
+    var response = await http.post(Uri.parse(url),
+        body: param,
+        headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
+
+    var resp = json.decode(response.body);
+    if (response.statusCode == 200) {
+      cprint('json postAction $action resp: $resp');
+
+      return resp;
+
+      //cprint('json postUser: $resp');
+    } else {
+      cprint('postAction -error status: ${response.statusCode}, body: $resp');
+    }
+  } catch (error) {
+    cprint('postAction error: $error');
+  }
+  return 1;
 }
