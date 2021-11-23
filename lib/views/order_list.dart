@@ -61,7 +61,20 @@ class _OrderListState extends State<OrderList> {
           ),
         );
       } else if (zctr.olIsEmpty.value) {
-        return const Center(child: Text('Нет заказов'));
+        return Center(
+            child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Нет заказов'),
+            IconButton(
+                onPressed: () {
+                  zctr.olIsEmpty(false);
+                  zctr.requestOrders();
+                },
+                padding: const EdgeInsets.all(0),
+                icon: const Icon(Icons.refresh))
+          ],
+        ));
       } else {
         return const Center(child: CircularProgressIndicator());
       }

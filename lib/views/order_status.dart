@@ -10,6 +10,7 @@ import '/helpers/alerts.dart';
 import '/widgets/map.dart';
 import '/widgets/my_widgets.dart';
 import '../helpers/api_req.dart';
+import 'order_detail.dart';
 
 class OrderStatus extends StatefulWidget {
   const OrderStatus(this.zkz, {Key? key}) : super(key: key);
@@ -30,6 +31,10 @@ class _OrderStatusState extends State<OrderStatus> {
     super.initState();
     //initMap();
     //zctr.listenLocation();
+    if (widget.zkz.statusId == Zakaz.statusInProgress &&
+        zctr.durTimer == null) {
+      zctr.durationTimer(widget.zkz.start!);
+    }
   }
 
   void initMap() {
@@ -92,7 +97,7 @@ class _OrderStatusState extends State<OrderStatus> {
     return DraggableScrollableSheet(
         initialChildSize: .3,
         minChildSize: .12,
-        maxChildSize: .8,
+        maxChildSize: .5,
         builder: (BuildContext context, ScrollController scrollController) {
           return scrollViewContent(scrollController);
         });
@@ -144,9 +149,13 @@ class _OrderStatusState extends State<OrderStatus> {
       ListTile(
         title: Text(widget.zkz.longTitle),
         trailing: const Icon(Icons.arrow_right),
+        onTap: () {
+          Get.to(OrderDetail(widget.zkz));
+        },
       ),
       const Divider(height: 8),
       statuses(),
+      sum(),
       actionBtn(),
       const Divider(height: 8),
       contact(),
@@ -159,8 +168,10 @@ class _OrderStatusState extends State<OrderStatus> {
   Widget statuses() {
     return Obx(() {
       var statId = widget.zkz.statusId;
+      cprint('statId $statId');
       if (zctr.statusMap.containsKey(widget.zkz.id)) {
         statId = zctr.statusMap[widget.zkz.id]!;
+        cprint('statId2 $statId');
       }
 
       return Container(
@@ -168,23 +179,50 @@ class _OrderStatusState extends State<OrderStatus> {
         child: Row(children: [
           txt2('Статус:'),
           const SizedBox(width: 16),
-          Text(Zakaz.statusStr(statId))
+          Text(Zakaz.statusStr(statId)),
+          const SizedBox(width: 16),
+          timer()
         ]),
       );
     });
   }
 
+  //TODO add where and and when after status
+
+  Widget sum() {
+    if (widget.zkz.sum != 0) {
+      return Container(
+        padding: const EdgeInsets.only(left: 16, bottom: 16),
+        child: Row(children: [
+          txt2('Сумма:'),
+          const SizedBox(width: 16),
+          Text('${widget.zkz.sum} сом')
+        ]),
+      );
+    }
+    return const SizedBox();
+  }
+
   Widget contact() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          message(),
-          call(),
-        ],
-      ),
-    );
+    return Obx(() {
+      var statId = widget.zkz.statusId;
+      if (zctr.statusMap.containsKey(widget.zkz.id)) {
+        statId = zctr.statusMap[widget.zkz.id]!;
+      }
+      if (statId > Zakaz.statusInProgress) {
+        return const SizedBox();
+      }
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            message(),
+            call(),
+          ],
+        ),
+      );
+    });
   }
 
   Widget message() {
@@ -252,7 +290,8 @@ class _OrderStatusState extends State<OrderStatus> {
         'zctg_id': widget.zkz.ctgId.toString()
       });
       if (res is int && res == 0) {
-        //await Get.off(OrderStatus(widget.zkz));
+        widget.zkz.approaching();
+        //TODO start streaming location
       } else {
         errorAlert('Произошла ошибка');
       }
@@ -272,9 +311,7 @@ class _OrderStatusState extends State<OrderStatus> {
           'zctg_id': widget.zkz.ctgId.toString()
         });
         if (res is int && res == 0) {
-          zctr.statusMap[widget.zkz.id] = Zakaz.statusInProgress;
-          widget.zkz.ctgId = Zakaz.statusInProgress;
-          widget.zkz.start = Misc.currentTs();
+          widget.zkz.started();
         } else {
           errorAlert('Произошла ошибка');
           zctr.isLoadingMap['start'] = false;
@@ -301,9 +338,7 @@ class _OrderStatusState extends State<OrderStatus> {
           'zctg_id': widget.zkz.ctgId.toString()
         });
         if (res is int && res == 0) {
-          zctr.statusMap[widget.zkz.id] = Zakaz.statusCompleted;
-          widget.zkz.ctgId = Zakaz.statusCompleted;
-          widget.zkz.finish = Misc.currentTs();
+          widget.zkz.done();
         } else {
           errorAlert('Произошла ошибка');
           zctr.isLoadingMap['finish'] = false;
@@ -319,43 +354,53 @@ class _OrderStatusState extends State<OrderStatus> {
     });
   }
 
-  Widget doneBtn2() {
-    void onPresd() async {
-      var res = await postAction('finish', {
-        'id': widget.zkz.id.toString(),
-        'zctg_id': widget.zkz.ctgId.toString()
-      });
-      if (res is int && res == 0) {
-        //await Get.off(OrderStatus(widget.zkz));
-      } else {
-        errorAlert('Произошла ошибка');
-      }
-    }
-
-    return MyWid.txtBtn(const Text('Завершить'), onPresd, safearea: false);
-  }
-
   Widget cancelBtn() {
-    return TextButton(
-      child: const Text('Отменить заказ',
-          style: TextStyle(
-              fontSize: 12, fontWeight: FontWeight.normal, color: Colors.grey)),
-      onPressed: () async {
-        var res = await postAction('cancel', {
-          'id': widget.zkz.id.toString(),
-          'zctg_id': widget.zkz.ctgId.toString()
-        });
-        if (res is int && res == 0) {
-          //await Get.off(OrderStatus(widget.zkz));
-        } else {
-          errorAlert('Произошла ошибка');
-        }
-      },
-    );
+    return Obx(() {
+      var statId = widget.zkz.statusId;
+      if (zctr.statusMap.containsKey(widget.zkz.id)) {
+        statId = zctr.statusMap[widget.zkz.id]!;
+      }
+      if (statId > Zakaz.statusInProgress) {
+        return const SizedBox();
+      }
+      return TextButton(
+        child: const Text('Отменить заказ',
+            style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.normal,
+                color: Colors.grey)),
+        onPressed: () async {
+          var res = await postAction('cancel', {
+            'id': widget.zkz.id.toString(),
+            'zctg_id': widget.zkz.ctgId.toString()
+          });
+          if (res is int && res != 0) {
+            widget.zkz.cancel(res);
+            Get.back();
+          } else {
+            errorAlert('Произошла ошибка');
+          }
+        },
+      );
+    });
   }
 
   Widget timer() {
-    return Text('2:34');
+    if (widget.zkz.statusId != Zakaz.statusInProgress) {
+      return const SizedBox();
+    }
+    var duration = zctr.durTimerValue.value;
+    var sec = (duration % 60).toString().padLeft(2, '0');
+    var minute = '00';
+    if (duration > 60) {
+      minute = (duration / 60).floor().toString().padLeft(2, '0');
+    }
+    var hour = '00';
+    if (duration > 3600) {
+      hour = (duration / 3600).floor().toString().padLeft(2, '0');
+    }
+
+    return Text('$hour:$minute:$sec');
   }
 
   Widget myTile(String lbl, String text, {String tale = ''}) {

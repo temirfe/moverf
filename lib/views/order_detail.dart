@@ -28,8 +28,8 @@ class _OrderDetailState extends State<OrderDetail> {
 
   @override
   void initState() {
-    super.initState();
-    initMap();
+    //super.initState();
+    //initMap();
   }
 
   void initMap() {
@@ -66,7 +66,8 @@ class _OrderDetailState extends State<OrderDetail> {
     return Column(children: [
       SizedBox(
         height: Get.height / 4,
-        child: mymap.gmapX(),
+        //child: mymap.gmapX(),
+        child: const SizedBox(),
       ),
       Expanded(
           child: ListView(
@@ -143,7 +144,6 @@ class _OrderDetailState extends State<OrderDetail> {
   }
 
   Widget _totalPrice() {
-    var finalPrice = widget.zkz.ctgPrice;
     var chldrn = <Widget>[
       Row(children: [
         Expanded(
@@ -153,23 +153,44 @@ class _OrderDetailState extends State<OrderDetail> {
       ]),
     ];
     if (widget.zkz.loaders != '0') {
-      var lodersPrice = int.parse(widget.zkz.loaders) * zctr.loaderPrice;
-      finalPrice += lodersPrice;
       chldrn.add(const SizedBox(height: 10));
       chldrn.add(Row(children: [
         Expanded(
           child: Text('Грузчики(${widget.zkz.loaders})'),
         ),
-        Text('$lodersPrice сом/час'),
+        Text('${widget.zkz.loadersPrice} сом/час'),
       ]));
     }
     chldrn.add(const SizedBox(height: 12));
-    chldrn.add(Row(children: [
-      Expanded(
-        child: txtEm('Итого'),
-      ),
-      txtEm('$finalPrice сом/час'),
-    ]));
+    chldrn.add(
+      Row(children: [
+        Expanded(
+          child: txtEm('Итого'),
+        ),
+        txtEm('${widget.zkz.finalPrice} сом/час'),
+      ]),
+    );
+    if (widget.zkz.duration != null) {
+      chldrn.add(const SizedBox(height: 5));
+      chldrn.add(
+        Row(children: [
+          Expanded(
+            child: txtEm('Время'),
+          ),
+          txtEm(widget.zkz.durStr),
+        ]),
+      );
+      chldrn.add(const SizedBox(height: 10));
+
+      chldrn.add(
+        Row(children: [
+          Expanded(
+            child: txtEm('Сумма'),
+          ),
+          txtEm('${widget.zkz.sum} сом'),
+        ]),
+      );
+    }
     return Padding(
       padding: pad,
       child: Column(children: chldrn),
@@ -177,6 +198,9 @@ class _OrderDetailState extends State<OrderDetail> {
   }
 
   Widget _acceptBtn() {
+    if (widget.zkz.statusId != 1) {
+      return const SizedBox();
+    }
     return Container(
       child: MyWid.txtBtn('Принять', () async {
         if (zctr.prof == null) {
@@ -190,6 +214,7 @@ class _OrderDetailState extends State<OrderDetail> {
             errorAlert('Произошла ошибка');
           } else {
             widget.zkz.statusId = res;
+            zctr.statusMap[widget.zkz.id] = res;
             await Get.off(OrderStatus(widget.zkz));
           }
         }

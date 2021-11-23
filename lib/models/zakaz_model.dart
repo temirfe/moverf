@@ -57,7 +57,7 @@ class Zakaz {
   static String statusStr(int sid) {
     var ret = '';
     switch (sid) {
-      case statusCreated:
+      case statusAccepted:
         ret = 'Принято';
         break;
       case statusApproaching:
@@ -122,6 +122,42 @@ class Zakaz {
     return zctr.ctgPrice[ctgId]!;
   }
 
+  int get loadersPrice {
+    return int.parse(loaders) * zctr.loaderPrice;
+  }
+
+  int get finalPrice {
+    return ctgPrice + loadersPrice;
+  }
+
+  int get sum {
+    if (duration != null) {
+      var minutes = (duration! / 60).round();
+      if (minutes < 60) {
+        minutes = 60;
+      }
+      var hours = minutes / 60;
+      return (finalPrice * hours).round();
+    }
+    return 0;
+  }
+
+  String get durStr {
+    var ret = '';
+    if (duration != null) {
+      var minutes = (duration! / 60).floor();
+      var modulo = minutes % 60;
+      var hoursWhole = ((minutes - modulo) / 60).round();
+      if (hoursWhole > 0) {
+        ret = '$hoursWhole ч ';
+      }
+      if (modulo > 0) {
+        ret += '$modulo м';
+      }
+    }
+    return ret;
+  }
+
   String get distance {
     var ret = '';
     if (zctr.lastLat != 0.0) {
@@ -133,5 +169,32 @@ class Zakaz {
       }
     }
     return ret;
+  }
+
+  void approaching() {
+    zctr.statusMap[id] = statusApproaching;
+    statusId = statusApproaching;
+  }
+
+  void started() {
+    zctr.statusMap[id] = statusInProgress;
+    statusId = statusInProgress;
+    start = Misc.currentTs();
+    zctr.durationTimer(start!);
+  }
+
+  void done() {
+    zctr.statusMap[id] = statusCompleted;
+    statusId = statusCompleted;
+    finish = Misc.currentTs();
+    if (start != null) {
+      duration = start! - finish!;
+    }
+    zctr.cancelTimer();
+  }
+
+  void cancel(int statId) {
+    zctr.statusMap[id] = statusId;
+    statusId = statId;
   }
 }

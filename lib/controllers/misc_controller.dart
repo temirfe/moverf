@@ -33,6 +33,8 @@ class MiscController extends BaseController {
   var codeView = false.obs;
   Timer? smsTimer;
   var smsTimerValue = 0.obs;
+  Timer? durTimer;
+  var durTimerValue = 0.obs;
 
   var profileFormIsDirty = false.obs;
   Profile? prof;
@@ -236,10 +238,25 @@ class MiscController extends BaseController {
     );
   }
 
+  void durationTimer(int beginTs) {
+    durTimerValue.value = (Misc.currentTs() - beginTs);
+    const oneSec = Duration(seconds: 1);
+    durTimer = Timer.periodic(
+      oneSec,
+      (Timer timer) {
+        durTimerValue.value++;
+        cprint('durTimer ${durTimerValue.value}');
+      },
+    );
+  }
+
   void cancelTimer() {
     if (smsTimer != null) {
       smsTimerValue.value = 0;
       smsTimer!.cancel();
+    }
+    if (durTimer != null) {
+      durTimer!.cancel();
     }
   }
 
