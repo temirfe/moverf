@@ -82,11 +82,31 @@ class Misc {
   }
 
   static String dateStr(DateTime dt, {int format = 1}) {
-    var dateFormat = DateFormat('d MMMM H:m', 'ru_RU');
+    var dateFormat = DateFormat('d MMMM H:mm', 'ru_RU');
     if (format == 2) {
       dateFormat = DateFormat('d.MM.y');
     }
+    if (format == 3) {
+      dateFormat = DateFormat('H:mm');
+    }
     return dateFormat.format(dt);
+  }
+
+  static int dayDif(DateTime given) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = DateTime(now.year, now.month, now.day - 1);
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+
+    final aDate = DateTime(given.year, given.month, given.day);
+    if (aDate == today) {
+      return 0;
+    } else if (aDate == yesterday) {
+      return -1;
+    } else if (aDate == tomorrow) {
+      return 1;
+    }
+    return 2;
   }
 
   static String myCurrency(String v) {
@@ -107,25 +127,23 @@ class Misc {
 
   static String dateStr2(DateTime dtBegin, {bool long = false}) {
     var val = '';
-    var now = DateTime.now();
-    var tomorrow = now.add(const Duration(days: 1));
+    var dif = dayDif(dtBegin);
 
     dynamic todayOrTomorrow;
-    if (dtBegin.day == now.day) {
+    if (dif == 0) {
       if (long) {
         todayOrTomorrow = 'Сегодня в ';
       } else {
         todayOrTomorrow = '';
       }
-    } else if (dtBegin.day == tomorrow.day) {
+    } else if (dif == -1) {
       todayOrTomorrow = 'Завтра в ';
     }
 
     if (todayOrTomorrow != null) {
-      var formatter = DateFormat('H:mm');
-      val = todayOrTomorrow + formatter.format(dtBegin);
+      val = todayOrTomorrow + dateStr(dtBegin, format: 3);
     } else {
-      var formatter = DateFormat('d MMMM в H:mm', 'ru_RU');
+      var formatter = DateFormat('d MMM в H:mm', 'ru_RU');
       val = formatter.format(dtBegin);
     }
     return val;
@@ -133,15 +151,14 @@ class Misc {
 
   static String dateStr3(DateTime dt) {
     var val = '';
-    var now = DateTime.now();
-    var yest = now.subtract(const Duration(days: 1));
+    var dif = dayDif(dt);
 
     var yestStr = '';
     var formatter = DateFormat('H:mm');
     /* if (dt.day == now.day) {
       formatter = DateFormat('H:mm');
     } else  */
-    if (dt.day == yest.day) {
+    if (dif == -1) {
       yestStr = 'Вчера ';
     } else {
       formatter = DateFormat('d MMM H:mm', 'ru_RU');

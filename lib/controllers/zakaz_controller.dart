@@ -36,13 +36,13 @@ class ZakazController extends MapController {
     requestCategories();
   }
 
-  void populateList() async {
+  void populateList({bool refreshList = false}) async {
     await getLocation();
-    requestOrders();
+    requestOrders(refresh: refreshList);
     requestMyOrders();
   }
 
-  void requestOrders() async {
+  void requestOrders({bool refresh = false}) async {
     var ctg = 'zakaz';
     if (xCurrentPage[ctg] != 0 && currentPage < xPageCount[ctg]!) {
       currentPage = (xCurrentPage[ctg]! + 1);
@@ -50,7 +50,11 @@ class ZakazController extends MapController {
 
     var list = await getOrders();
     if (list.isNotEmpty) {
-      orderList.addAll(list);
+      if (refresh) {
+        orderList.assignAll(list);
+      } else {
+        orderList.addAll(list);
+      }
     } else {
       olIsEmpty.value = true;
     }
@@ -62,7 +66,7 @@ class ZakazController extends MapController {
       currentPageMy = (xCurrentPage[ctg]! + 1);
     }
 
-    var list = await getOrders(params: 'p=true');
+    var list = await getOrders(params: 'p=true', forwho: 'myOrders');
     if (list.isNotEmpty) {
       myOrderList.addAll(list);
     } else {

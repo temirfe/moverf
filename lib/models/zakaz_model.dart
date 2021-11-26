@@ -145,6 +145,9 @@ class Zakaz {
   String get durStr {
     var ret = '';
     if (duration != null) {
+      if (duration! < 60) {
+        return '$duration с';
+      }
       var minutes = (duration! / 60).floor();
       var modulo = minutes % 60;
       var hoursWhole = ((minutes - modulo) / 60).round();
@@ -188,7 +191,8 @@ class Zakaz {
     statusId = statusCompleted;
     finish = Misc.currentTs();
     if (start != null) {
-      duration = start! - finish!;
+      duration = finish! - start!;
+      cprint('done s $start, f $finish, d $duration');
     }
     zctr.cancelTimer();
   }

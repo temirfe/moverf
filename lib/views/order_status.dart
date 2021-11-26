@@ -168,10 +168,8 @@ class _OrderStatusState extends State<OrderStatus> {
   Widget statuses() {
     return Obx(() {
       var statId = widget.zkz.statusId;
-      cprint('statId $statId');
       if (zctr.statusMap.containsKey(widget.zkz.id)) {
         statId = zctr.statusMap[widget.zkz.id]!;
-        cprint('statId2 $statId');
       }
 
       return Container(
@@ -181,26 +179,31 @@ class _OrderStatusState extends State<OrderStatus> {
           const SizedBox(width: 16),
           Text(Zakaz.statusStr(statId)),
           const SizedBox(width: 16),
-          timer()
+          timer(),
+          when()
         ]),
       );
     });
   }
 
-  //TODO add where and and when after status
-
   Widget sum() {
-    if (widget.zkz.sum != 0) {
-      return Container(
-        padding: const EdgeInsets.only(left: 16, bottom: 16),
-        child: Row(children: [
-          txt2('Сумма:'),
-          const SizedBox(width: 16),
-          Text('${widget.zkz.sum} сом')
-        ]),
-      );
-    }
-    return const SizedBox();
+    return Obx(() {
+      var statId = widget.zkz.statusId;
+      if (zctr.statusMap.containsKey(widget.zkz.id)) {
+        statId = zctr.statusMap[widget.zkz.id]!;
+      }
+      if (statId > Zakaz.statusInProgress && widget.zkz.sum != 0) {
+        return Container(
+          padding: const EdgeInsets.only(left: 16, bottom: 16),
+          child: Row(children: [
+            txt2('Сумма:'),
+            const SizedBox(width: 16),
+            Text('${widget.zkz.sum} сом')
+          ]),
+        );
+      }
+      return const SizedBox();
+    });
   }
 
   Widget contact() {
@@ -283,21 +286,30 @@ class _OrderStatusState extends State<OrderStatus> {
   }
 
   Widget approachBtn() {
-    void onPresd() async {
-      //zctr.periodic();
-      var res = await postAction('approach', {
-        'id': widget.zkz.id.toString(),
-        'zctg_id': widget.zkz.ctgId.toString()
-      });
-      if (res is int && res == 0) {
-        widget.zkz.approaching();
-        //TODO start streaming location
-      } else {
-        errorAlert('Произошла ошибка');
-      }
-    }
+    return Obx(() {
+      Widget contnt = const Text('Выезжаю');
+      Function onPresd = () async {
+        //zctr.periodic();
+        zctr.isLoadingMap['approach'] = true;
+        var res = await postAction('approach', {
+          'id': widget.zkz.id.toString(),
+          'zctg_id': widget.zkz.ctgId.toString()
+        });
+        if (res is int && res == 0) {
+          widget.zkz.approaching();
+        } else {
+          errorAlert('Произошла ошибка');
+          zctr.isLoadingMap['start'] = false;
+        }
+      };
 
-    return MyWid.txtBtn(const Text('Выезжаю'), onPresd, safearea: false);
+      if (zctr.isLoadingMap.containsKey('approach') &&
+          zctr.isLoadingMap['approach']!) {
+        contnt = MyWid.loading();
+        onPresd = () {};
+      }
+      return MyWid.txtBtn(contnt, onPresd, safearea: false);
+    });
   }
 
   Widget startBtn() {
@@ -360,7 +372,7 @@ class _OrderStatusState extends State<OrderStatus> {
       if (zctr.statusMap.containsKey(widget.zkz.id)) {
         statId = zctr.statusMap[widget.zkz.id]!;
       }
-      if (statId > Zakaz.statusInProgress) {
+      if (statId > Zakaz.statusApproaching) {
         return const SizedBox();
       }
       return TextButton(
@@ -392,15 +404,22 @@ class _OrderStatusState extends State<OrderStatus> {
     var duration = zctr.durTimerValue.value;
     var sec = (duration % 60).toString().padLeft(2, '0');
     var minute = '00';
-    if (duration > 60) {
+    if (duration >= 60) {
       minute = (duration / 60).floor().toString().padLeft(2, '0');
     }
     var hour = '00';
-    if (duration > 3600) {
+    if (duration >= 3600) {
       hour = (duration / 3600).floor().toString().padLeft(2, '0');
     }
 
     return Text('$hour:$minute:$sec');
+  }
+
+  Widget when() {
+    if (widget.zkz.statusId != Zakaz.statusAccepted) {
+      return const SizedBox();
+    }
+    return Text('Начать ${widget.zkz.startDate}');
   }
 
   Widget myTile(String lbl, String text, {String tale = ''}) {

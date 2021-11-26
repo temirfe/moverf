@@ -35,7 +35,6 @@ class _OrderListState extends State<MyOrderList> {
     return Scaffold(
       appBar: AppBar(title: const Text('Мои заказы'), centerTitle: true),
       backgroundColor: Colors.grey[200],
-      drawer: myDrawer(context, zctr),
       body: myBody(),
     );
   }
@@ -111,8 +110,11 @@ class _OrderListState extends State<MyOrderList> {
 
     return InkWell(
       onTap: () {
-        //Get.to(OrderDetail(zakaz));
-        Get.to(OrderStatus(zakaz));
+        if (zakaz.statusId > Zakaz.statusInProgress) {
+          Get.to(OrderDetail(zakaz));
+        } else {
+          Get.to(OrderStatus(zakaz));
+        }
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),

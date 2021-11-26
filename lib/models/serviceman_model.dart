@@ -4,7 +4,7 @@ import 'package:get/get.dart';
 import '/helpers/misc.dart';
 import '/controllers/zakaz_controller.dart';
 
-class Profile {
+class Serviceman {
   final ZakazController zctr = Get.find<ZakazController>();
   int id;
   int? rating;
@@ -17,7 +17,7 @@ class Profile {
   //int onShift;
   //int onDuty;
 
-  Profile.fromJson(Map json)
+  Serviceman.fromJson(Map json)
       : id = json['id'],
         rating = json['rating'],
         balance = json['balance'],

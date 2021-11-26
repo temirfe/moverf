@@ -27,7 +27,7 @@ class _OrderListState extends State<OrderList> {
   @override
   void initState() {
     super.initState();
-    zctr.populateList();
+    zctr.populateList(refreshList: true);
   }
 
   @override

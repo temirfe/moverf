@@ -1,22 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mover/helpers/alerts.dart';
 import 'package:mover/helpers/api_req.dart';
 import '/controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
 import '/helpers/misc.dart';
 import '/widgets/my_widgets.dart';
-import '/models/profile_model.dart';
+import '../models/serviceman_model.dart';
 
-class ProfileForm extends StatefulWidget {
-  const ProfileForm({Key? key}) : super(key: key);
+class ServicemanForm extends StatefulWidget {
+  const ServicemanForm({Key? key}) : super(key: key);
 
   @override
-  State<ProfileForm> createState() => _ProfileFormState();
+  State<ServicemanForm> createState() => _ProfileFormState();
 }
 
-class _ProfileFormState extends State<ProfileForm> {
+class _ProfileFormState extends State<ServicemanForm> {
   final ZakazController zctr = Get.find<ZakazController>();
 
   final _formKey = GlobalKey<FormState>();
@@ -25,7 +24,7 @@ class _ProfileFormState extends State<ProfileForm> {
   final tcPlate = TextEditingController();
   final tcMark = TextEditingController();
   final tcColor = TextEditingController();
-  Profile? prof;
+  Serviceman? prof;
 
   @override
   void initState() {
@@ -69,6 +68,7 @@ class _ProfileFormState extends State<ProfileForm> {
             key: _formKey,
             child: ListView(
               children: [
+                const SizedBox(height: 10),
                 name(),
                 const SizedBox(height: 20),
                 txt2('Категория'),
@@ -313,8 +313,13 @@ class _ProfileFormState extends State<ProfileForm> {
           zctr.isSubmittingProfile(false);
           if (res) {
             zctr.profileFormIsDirty(false);
-            successAlert('Сохранено');
             zctr.downloadProfile();
+            var arg = Get.arguments;
+            if (arg != null && arg == 'off') {
+              await Get.offNamed('/list');
+            } else {
+              successAlert('Сохранено');
+            }
           }
         }
       }

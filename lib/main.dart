@@ -6,7 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
-import 'package:mover/views/profile.dart';
+import 'package:mover/views/serviceman.dart';
 import '/helpers/misc.dart';
 import 'controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
@@ -98,8 +98,8 @@ class Router {
       page: () => LoginView(),
     ),
     GetPage(
-      name: '/profile',
-      page: () => const ProfileForm(),
+      name: '/serviceman',
+      page: () => const ServicemanForm(),
     ),
     /* GetPage(
       name: '/filter',

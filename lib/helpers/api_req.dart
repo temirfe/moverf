@@ -73,7 +73,7 @@ Future postUser(Map param) async {
   // session.setBool('internet', internet);
   const url = urlBase + 'zakaz/auth';
   try {
-    //cprint('postUser $param');
+    cprint('postUser params: $param');
     var response = await http.post(Uri.parse(url), body: param);
 
     cprint('json postUser statusCode: ${response.statusCode}');
@@ -134,8 +134,12 @@ Future<List> getCurrentOrders() async {
   return [];
 }
 
-Future<List> getOrders({String params = ''}) async {
-  var url = urlBase + 'zakazs?page=${zctr.currentPage}';
+Future<List> getOrders({String params = '', String forwho = 'zakaz'}) async {
+  var curPg = zctr.currentPage;
+  if (forwho == 'myOrders') {
+    curPg = zctr.currentPageMy;
+  }
+  var url = urlBase + 'zakazs?page=$curPg';
   if (params != '') {
     url += '&$params';
   }
@@ -149,11 +153,11 @@ Future<List> getOrders({String params = ''}) async {
       cprint('getOrders $params length: ${json.decode(response.body).length}');
       response.headers.forEach((name, values) {
         if (name == 'x-pagination-page-count') {
-          zctr.xPageCount['zakaz'] = int.parse(values[0]);
+          zctr.xPageCount[forwho] = int.parse(values[0]);
         } else if (name == 'x-pagination-current-page') {
-          zctr.xCurrentPage['zakaz'] = int.parse(values[0]);
+          zctr.xCurrentPage[forwho] = int.parse(values[0]);
         } else if (name == 'x-pagination-total-count') {
-          zctr.xTotalCount['zakaz'] = int.parse(values[0]);
+          zctr.xTotalCount[forwho] = int.parse(values[0]);
         }
       });
 
@@ -192,7 +196,7 @@ Future<bool> postServiceman(Map param) async {
 }
 
 Future getProfile() async {
-  const url = urlBase + 'zakaz/profile';
+  const url = urlBase + 'zakaz/serviceman';
   var authkey = prefBox.get('authKey');
   try {
     //cprint('request getProfile');
@@ -233,4 +237,21 @@ Future<int> postAction(String action, Map param) async {
     cprint('postAction error: $error');
   }
   return 1;
+}
+
+Future<int> getStatus(int id) async {
+  var url = urlBase + 'zakaz/status?id=$id';
+  try {
+    //cprint('request getCharts');
+    var response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      //cprint('json getCategories decode response is: ${json.decode(response.body)}');
+      return json.decode(response.body);
+    } else {
+      cprint('getStatus -error statusCode: ${response.statusCode}');
+    }
+  } catch (error) {
+    cprint('getStatus error: $error');
+  }
+  return 0;
 }

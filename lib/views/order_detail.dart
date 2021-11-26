@@ -28,8 +28,19 @@ class _OrderDetailState extends State<OrderDetail> {
 
   @override
   void initState() {
-    //super.initState();
+    super.initState();
     //initMap();
+    checkStatus();
+  }
+
+  void checkStatus() async {
+    var freshStatus = await getStatus(widget.zkz.id);
+    if (freshStatus != widget.zkz.statusId) {
+      setState(() {
+        widget.zkz.statusId = freshStatus;
+        zctr.statusMap[widget.zkz.id] = freshStatus;
+      });
+    }
   }
 
   void initMap() {
@@ -78,6 +89,7 @@ class _OrderDetailState extends State<OrderDetail> {
 
   List<Widget> bodyList() {
     var list = <Widget>[
+      status(),
       myTile('Когда', widget.zkz.startDateLong),
       const Divider(height: 8),
       myTile('Откуда', widget.zkz.address, tale: widget.zkz.distance),
@@ -88,6 +100,20 @@ class _OrderDetailState extends State<OrderDetail> {
     ];
 
     return list;
+  }
+
+  Widget status() {
+    if (widget.zkz.statusId != 1) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        child: Row(children: [
+          txt2('Статус:'),
+          const SizedBox(width: 16),
+          Text(Zakaz.statusStr(widget.zkz.statusId)),
+        ]),
+      );
+    }
+    return const SizedBox();
   }
 
   Widget myTile(String lbl, String text, {String tale = ''}) {

@@ -22,7 +22,7 @@ List<Widget> _drawerList(BuildContext context, ZakazController zctr) {
         icon: Icons.person_outlined,
         text: 'Профиль',
         onTap: () async {
-          await Get.toNamed('/profile');
+          await Get.toNamed('/serviceman');
         }),
     _createDrawerItem(
         icon: Icons.history_outlined,

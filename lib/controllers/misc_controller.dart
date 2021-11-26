@@ -11,7 +11,7 @@ import 'package:flutter/services.dart' show PlatformException;
 import '/helpers/misc.dart';
 import '/helpers/alerts.dart';
 import '/helpers/api_req.dart';
-import '/models/profile_model.dart';
+import '../models/serviceman_model.dart';
 /* 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -37,7 +37,7 @@ class MiscController extends BaseController {
   var durTimerValue = 0.obs;
 
   var profileFormIsDirty = false.obs;
-  Profile? prof;
+  Serviceman? prof;
   var isSubmittingProfile = false.obs;
 
   @override
@@ -53,7 +53,7 @@ class MiscController extends BaseController {
     if (prefBox.get('userId') != null) {
       var pro = await getProfile();
       if (pro != null) {
-        prof = Profile.fromJson(pro);
+        prof = Serviceman.fromJson(pro);
         await prefBox.put('name', prof!.user['name']);
       }
     }
@@ -208,13 +208,14 @@ class MiscController extends BaseController {
     var res = await postUser({
       'phone': phoneField.text,
       'device_id': prefBox.get('deviceId'),
-      'fcm_token': prefBox.get('tokenId')
+      'fcm_token': prefBox.get('tokenId'),
+      'is_driver': '1'
     });
     if (res != null) {
       cprint('saving user $res');
       saveAuth(res);
       if (res['is_new']) {
-        await Get.offNamed('/profile');
+        await Get.offNamed('/serviceman', arguments: 'off');
       } else {
         await Get.offNamed('/list');
       }
@@ -245,7 +246,6 @@ class MiscController extends BaseController {
       oneSec,
       (Timer timer) {
         durTimerValue.value++;
-        cprint('durTimer ${durTimerValue.value}');
       },
     );
   }
