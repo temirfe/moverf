@@ -40,6 +40,13 @@ class _OrderListState extends State<OrderList> {
     );
   }
 
+/* Listens for List orderList, show circularProgressIndicator while waiting,
+ builds ListView. If empty shows "List is empty"
+and a refresh icon button on pressing which sends a request to server.
+On scrolling to the end new reqeuest is sent to server and new items are added to the
+bottom of list. On pulling list down the "loading" widget appears on top and list is refreshed
+by new request. 
+ GetX state management is used. */
   Widget myBody() {
     return Obx(() {
       if (zctr.orderList.isNotEmpty) {
