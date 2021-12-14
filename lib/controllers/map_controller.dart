@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:collection';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
+//import 'package:get/get.dart';
+import 'package:mover/helpers/alerts.dart';
 import '/helpers/misc.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:background_location/background_location.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:web_socket_channel/io.dart';
@@ -26,16 +28,16 @@ import 'package:flutter/services.dart'; */
 class MapController extends MiscController {
   double lastLat = 0.0; //_getLastUserLoc(), save user location
   double lastLng = 0.0;
+  int locLastChecked = 0; //timestamp
   final GeolocatorPlatform _geolocatorPlatform = GeolocatorPlatform.instance;
   bool isAskingLocPerm = false;
   var pointsMap = SplayTreeMap<int, Map<String, dynamic>>();
-  var mapPolylines = <PolylineId, Polyline>{}.obs;
+  var mapPolylines = <PolylineId, Polyline>{};
   var camPos = const CameraPosition(
     target: LatLng(42.8763158, 74.6069835),
-    zoom: 14.4746,
+    zoom: 13,
   );
-  late final PolylinePoints polylinePoints;
-  Completer<GoogleMapController> mapCmpl = Completer();
+  late final PolylinePoints polylinePoints = PolylinePoints();
   GoogleMapController? gmctr;
   final Map<MarkerId, Marker> markersMap = <MarkerId, Marker>{};
   final Set<Marker> markers = {};
@@ -47,7 +49,7 @@ class MapController extends MiscController {
   void onInit() {
     super.onInit();
     circleMarker();
-    polylinePoints = PolylinePoints();
+    //polylinePoints = PolylinePoints();
     //initWs();
   }
 
@@ -56,26 +58,38 @@ class MapController extends MiscController {
     _channel!.sink.add(json.encode({'action': 'setId', 'id': 3}));
   }
 
-  void periodic() {
-    const dur = Duration(seconds: 3);
-    Timer.periodic(dur, (Timer t) => sendLoc());
+  void periodic(int zkzId, int ordererId) {
+    const dur = Duration(seconds: 6);
+    peri = Timer.periodic(dur, (Timer t) => sendLoc(zkzId, ordererId));
   }
 
-  void sendLoc() async {
+  void sendLoc(int zkzId, int ordererId) async {
     if (iter < points.length) {
       var coord = points[iter].split(',');
-      await updateCurrentPlace(double.parse(coord[0]), double.parse(coord[1]));
+      //cprint('coord ${coord[0]},${coord[1]}');
+      var params = {
+        'lat': coord[0],
+        'lng': coord[1],
+        'zakaz_id': zkzId.toString(),
+        'created_by': ordererId.toString()
+      };
+      postLocation(params);
+      //await updateCurrentPlace(double.parse(coord[0]), double.parse(coord[1]));
       iter++;
     }
   }
 
   Future<void> updateCurrentPlace(double lat, double lng) async {
-    mapPolylines.clear();
-    //cprint('coord $lat,$lng');
-    pointsMap[0] = {'title': 'Текущее положение', 'lat': lat, 'lng': lng};
-    createMarkers(circle: true);
+    markersMap.clear();
+    //pointsMap[0] = {'title': 'Текущее положение', 'lat': lat, 'lng': lng};
+    var mid = const MarkerId('m3');
+    markersMap[mid] = Marker(
+      markerId: mid,
+      position: LatLng(lat, lng),
+    );
+    update();
     //await createStraightPolylines();
-    await checkCameraLocation();
+    //await checkCameraLocation();
     //_channel!.sink.add(json.encode({'action': 'chat', 'text': '$lat,$lng', 'to': 1}));
   }
 
@@ -209,7 +223,7 @@ class MapController extends MiscController {
       // Adding the polyline to the map
       //setState(() {});
       mapPolylines[id] = polyline;
-      //update();
+      update();
     }
   }
 
@@ -221,7 +235,7 @@ class MapController extends MiscController {
     var points = 0;
     var count = pointsMap.length;
     pointsMap.forEach((key, value) {
-      //cprint('adding marker for ${value['title']}');
+      cprint('adding marker for ${value['title']}');
       var visible = true;
       var icnRed = BitmapDescriptor.defaultMarker;
       var icnGreen =
@@ -327,8 +341,8 @@ class MapController extends MiscController {
     return [lat, lng];
   }
 
-  Future<List> getLocation() async {
-    bool serviceEnabled;
+  Future<bool> locationPermission() async {
+    var serviceEnabled = false;
     LocationPermission permission;
 
     // Test if location services are enabled.
@@ -337,32 +351,37 @@ class MapController extends MiscController {
       // Location services are not enabled don't continue
       // accessing the position and request users of the
       // App to enable the location services.
-      return Future.error('Location services are disabled.');
+      errorAlert('Включите геолокацию в настройках');
+      //return Future.error('Location services are disabled.');
     }
 
     permission = await _geolocatorPlatform.checkPermission();
-    if (permission == LocationPermission.denied && !isAskingLocPerm) {
-      isAskingLocPerm = true;
+    if (permission == LocationPermission.denied) {
       permission = await _geolocatorPlatform.requestPermission();
-      isAskingLocPerm = false;
       if (permission == LocationPermission.denied) {
-        // Permissions are denied, next time you could try
-        // requesting permissions again (this is also where
-        // Android's shouldShowRequestPermissionRationale
-        // returned true. According to Android guidelines
-        // your App should show an explanatory UI now.
-        return Future.error('Location permissions are denied');
+        cprint('permission denied');
+        errorAlert('Требуется разрешение на геолокацию');
+        //return Future.error('Location permissions are denied');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
-      return Future.error(
-          'Location permissions are permanently denied, we cannot request permissions.');
+      cprint('permission deniedForever');
+      errorAlert('Требуется разрешение на геолокацию');
+      //return Future.error('Location permissions are permanently denied, we cannot request permissions.');
     }
+    if (permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse) {
+      serviceEnabled = true;
+    }
+    return serviceEnabled;
+  }
 
-    // When we reach here, permissions are granted and we can
-    // continue accessing the position of the device.
+  Future<List> getLocation() async {
+    if (!await locationPermission()) {
+      return [];
+    }
     var ld = await _geolocatorPlatform.getCurrentPosition();
     var lat = ld.latitude;
     var lng = ld.longitude;
@@ -375,31 +394,65 @@ class MapController extends MiscController {
     return [lat, lng];
   }
 
-  void listenLocation() async {
-    var serviceEnabled = await _geolocatorPlatform.isLocationServiceEnabled();
-    if (serviceEnabled) {
-      var permission = await _geolocatorPlatform.checkPermission();
-      if (permission == LocationPermission.denied && !isAskingLocPerm) {
-        isAskingLocPerm = true;
-        permission = await _geolocatorPlatform.requestPermission();
-        isAskingLocPerm = false;
-      }
-      if (permission == LocationPermission.always ||
-          permission == LocationPermission.whileInUse) {
-        cprint('listening to loc');
-        Geolocator.getPositionStream(distanceFilter: 5)
-            .listen((Position position) {
-          var lat = position.latitude;
-          var lng = position.longitude;
-          var ts = Misc.currentTs();
-          cprint('$ts stream lat: $lat, lng: $lng');
-          updateCurrentPlace(lat, lng);
-        });
-      } else {
-        cprint('permission not enabled 2');
-      }
-    } else {
-      cprint('service not enabled');
+  /* void listenLocation() async {
+    if (await locationPermission()) {
+      cprint('listening to loc');
+      const locset = LocationSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 5,
+      );
+      Geolocator.getPositionStream(locationSettings: locset)
+          .listen((Position position) {
+        var lat = position.latitude;
+        var lng = position.longitude;
+        var ts = Misc.currentTs();
+        cprint('$ts stream lat: $lat, lng: $lng');
+        updateCurrentPlace(lat, lng);
+      });
     }
+  } */
+
+  void bgLocListen(int zkzId, int ordererId) async {
+    periodic(zkzId, ordererId);
+    return;
+    if (await locationPermission()) {
+      BackgroundLocation.setAndroidNotification(
+        title: 'Доступ к геолокации',
+        message: 'Ваше местоположение отображается на карте',
+      );
+      BackgroundLocation.startLocationService(distanceFilter: 15);
+      BackgroundLocation.getLocationUpdates((location) {
+        var ts = (location.time! / 1000).round();
+        if (locLastChecked == 0 || ts - locLastChecked > 5) {
+          cprint('location changed $ts');
+          var lat = location.latitude.toString();
+          var lng = location.longitude.toString();
+          var params = {
+            'lat': lat.toString(),
+            'lng': lng.toString(),
+            'zakaz_id': zkzId.toString(),
+            'created_by': ordererId.toString()
+          };
+          postLocation(params);
+
+          /* var accuracy = location.accuracy.toString();
+      var altitude = location.altitude.toString();
+      var bearing = location.bearing.toString();
+      var speed = location.speed.toString(); */
+        }
+        locLastChecked = ts;
+      });
+    }
+  }
+
+  void stopBgLoc() {
+    BackgroundLocation.stopLocationService();
+  }
+
+  @override
+  void onClose() {
+    cancelTimer();
+    stopBgLoc();
+    super.onClose();
   }
 }

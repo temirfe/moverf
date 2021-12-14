@@ -3,6 +3,9 @@ import 'package:get/get.dart';
 import '../helpers/api_req.dart';
 import 'map_controller.dart';
 import '/helpers/misc.dart';
+import 'package:mover/helpers/alerts.dart';
+import 'package:mover/models/zakaz_model.dart';
+import 'package:mover/views/order_status.dart';
 /* import 'dart:collection';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -29,12 +32,19 @@ class ZakazController extends MapController {
   int currentPageMy = 1;
   var isLoadingMap = <String, bool>{}.obs;
   var statusMap = <int, int>{}.obs;
+  Map<int, Zakaz> zakazMap = {};
 
   @override
   void onInit() {
     super.onInit();
     requestCategories();
   }
+
+  /* @override
+  void onReady() {
+    super.onReady();
+    listenLocation();
+  } */
 
   void populateList({bool refreshList = false}) async {
     await getLocation();
@@ -98,6 +108,77 @@ class ZakazController extends MapController {
       if (c['title'] == 'Грузчик' || c['title'] == 'Грузчики') {
         loaderPrice = c['price'];
       }
+    }
+  }
+
+  void accept(Zakaz zkz) async {
+    if (prof == null) {
+      errorAlert('Заполните профиль');
+    } else {
+      var res = await postAction(
+          'accept', {'id': zkz.id.toString(), 'zctg_id': zkz.ctgId.toString()});
+      if (res == 0) {
+        errorAlert('Произошла ошибка');
+      } else {
+        zakazMap[zkz.id]!.statusId = res;
+        zctr.statusMap[zkz.id] = res;
+        if (res == Zakaz.statusApproaching) {
+          bgLocListen(zkz.id, zkz.userId);
+        }
+        await Get.off(OrderStatus(zkz.id));
+      }
+    }
+  }
+
+  void approach(Zakaz zkz) async {
+    //zctr.periodic();
+    zctr.isLoadingMap['approach'] = true;
+    var res = await postAction(
+        'approach', {'id': zkz.id.toString(), 'zctg_id': zkz.ctgId.toString()});
+    if (res is int && res == 0) {
+      zkz.approaching();
+      bgLocListen(zkz.id, zkz.userId);
+    } else {
+      errorAlert('Произошла ошибка');
+      zctr.isLoadingMap['approach'] = false;
+    }
+  }
+
+  void start(Zakaz zkz) async {
+    //zctr.periodic();
+    zctr.isLoadingMap['start'] = true;
+    var res = await postAction(
+        'start', {'id': zkz.id.toString(), 'zctg_id': zkz.ctgId.toString()});
+    if (res is int && res == 0) {
+      zkz.started();
+    } else {
+      errorAlert('Произошла ошибка');
+      zctr.isLoadingMap['start'] = false;
+    }
+  }
+
+  void finish(Zakaz zkz) async {
+    zctr.isLoadingMap['finish'] = true;
+    var res = await postAction(
+        'finish', {'id': zkz.id.toString(), 'zctg_id': zkz.ctgId.toString()});
+    if (res is int && res == 0) {
+      zkz.done();
+      stopBgLoc();
+    } else {
+      errorAlert('Произошла ошибка');
+      zctr.isLoadingMap['finish'] = false;
+    }
+  }
+
+  void cancel(Zakaz zkz) async {
+    var res = await postAction(
+        'cancel', {'id': zkz.id.toString(), 'zctg_id': zkz.ctgId.toString()});
+    if (res is int && res != 0) {
+      zkz.cancel(res);
+      stopBgLoc();
+      Get.back();
+    } else {
+      errorAlert('Произошла ошибка');
     }
   }
 

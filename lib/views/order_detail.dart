@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 //import 'package:hive/hive.dart';
 //import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
-import 'package:mover/helpers/alerts.dart';
 import 'package:mover/models/zakaz_model.dart';
-import 'package:mover/views/order_status.dart';
 import '/helpers/misc.dart';
 import '/controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
@@ -13,8 +11,8 @@ import '/widgets/my_widgets.dart';
 import '../helpers/api_req.dart';
 
 class OrderDetail extends StatefulWidget {
-  const OrderDetail(this.zkz, {Key? key}) : super(key: key);
-  final Zakaz zkz;
+  const OrderDetail(this.zakazId, {Key? key}) : super(key: key);
+  final int zakazId;
 
   @override
   State<OrderDetail> createState() => _OrderDetailState();
@@ -22,23 +20,24 @@ class OrderDetail extends StatefulWidget {
 
 class _OrderDetailState extends State<OrderDetail> {
   final ZakazController zctr = Get.find<ZakazController>();
-  final MyMap mymap = MyMap();
   final EdgeInsets pad =
       const EdgeInsets.symmetric(horizontal: 16, vertical: 10);
+  Zakaz? zkz;
 
   @override
   void initState() {
     super.initState();
-    //initMap();
+    zkz = zctr.zakazMap[widget.zakazId]!;
+    initMap();
     checkStatus();
   }
 
   void checkStatus() async {
-    var freshStatus = await getStatus(widget.zkz.id);
-    if (freshStatus != widget.zkz.statusId) {
+    var freshStatus = await getStatus(zkz!.id);
+    if (freshStatus != zkz!.statusId) {
       setState(() {
-        widget.zkz.statusId = freshStatus;
-        zctr.statusMap[widget.zkz.id] = freshStatus;
+        zctr.zakazMap[widget.zakazId]!.statusId = freshStatus;
+        zctr.statusMap[widget.zakazId] = freshStatus;
       });
     }
   }
@@ -46,11 +45,11 @@ class _OrderDetailState extends State<OrderDetail> {
   void initMap() {
     zctr.pointsMap.clear();
     zctr.pointsMap[0] = {
-      'title': widget.zkz.address,
-      'lat': widget.zkz.lat,
-      'lng': widget.zkz.lng
+      'title': zkz!.address,
+      'lat': zkz!.lat,
+      'lng': zkz!.lng
     };
-    for (Map dest in widget.zkz.destinations) {
+    for (Map dest in zkz!.destinations) {
       var key = 1;
       zctr.pointsMap[key] = {
         'title': dest['address'],
@@ -66,7 +65,7 @@ class _OrderDetailState extends State<OrderDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.zkz.longTitle), centerTitle: true),
+      appBar: AppBar(title: Text(zkz!.longTitle), centerTitle: true),
       backgroundColor: Colors.white,
       body: myBody(),
       bottomSheet: _acceptBtn(),
@@ -77,8 +76,8 @@ class _OrderDetailState extends State<OrderDetail> {
     return Column(children: [
       SizedBox(
         height: Get.height / 4,
-        //child: mymap.gmapX(),
-        child: const SizedBox(),
+        child: MyMap(),
+        //child: const SizedBox(),
       ),
       Expanded(
           child: ListView(
@@ -90,9 +89,9 @@ class _OrderDetailState extends State<OrderDetail> {
   List<Widget> bodyList() {
     var list = <Widget>[
       status(),
-      myTile('Когда', widget.zkz.startDateLong),
+      myTile('Когда', zkz!.startDateLong),
       const Divider(height: 8),
-      myTile('Откуда', widget.zkz.address, tale: widget.zkz.distance),
+      myTile('Откуда', zkz!.address, tale: zkz!.distance),
       const Divider(height: 8),
       dest(),
       const Divider(height: 8),
@@ -103,13 +102,13 @@ class _OrderDetailState extends State<OrderDetail> {
   }
 
   Widget status() {
-    if (widget.zkz.statusId != 1) {
+    if (zkz!.statusId != 1) {
       return Container(
         padding: const EdgeInsets.all(16),
         child: Row(children: [
           txt2('Статус:'),
           const SizedBox(width: 16),
-          Text(Zakaz.statusStr(widget.zkz.statusId)),
+          Text(Zakaz.statusStr(zkz!.statusId)),
         ]),
       );
     }
@@ -134,9 +133,9 @@ class _OrderDetailState extends State<OrderDetail> {
 
   Widget dest() {
     var chldrn = <Widget>[txt2('Куда'), const SizedBox(height: 4)];
-    var prevLat = widget.zkz.lat;
-    var prevLng = widget.zkz.lng;
-    for (Map dest in widget.zkz.destinations) {
+    var prevLat = zkz!.lat;
+    var prevLng = zkz!.lng;
+    for (Map dest in zkz!.destinations) {
       var dist = _distance(dest['lat'], dest['lng'], prevLat, prevLng);
       prevLat = dest['lat'];
       prevLng = dest['lng'];
@@ -173,18 +172,18 @@ class _OrderDetailState extends State<OrderDetail> {
     var chldrn = <Widget>[
       Row(children: [
         Expanded(
-          child: Text(widget.zkz.ctgFullTitle),
+          child: Text(zkz!.ctgFullTitle),
         ),
-        Text('${widget.zkz.ctgPrice} сом/час'),
+        Text('${zkz!.ctgPrice} сом/час'),
       ]),
     ];
-    if (widget.zkz.loaders != '0') {
+    if (zkz!.loaders != '0') {
       chldrn.add(const SizedBox(height: 10));
       chldrn.add(Row(children: [
         Expanded(
-          child: Text('Грузчики(${widget.zkz.loaders})'),
+          child: Text('Грузчики(${zkz!.loaders})'),
         ),
-        Text('${widget.zkz.loadersPrice} сом/час'),
+        Text('${zkz!.loadersPrice} сом/час'),
       ]));
     }
     chldrn.add(const SizedBox(height: 12));
@@ -193,17 +192,17 @@ class _OrderDetailState extends State<OrderDetail> {
         Expanded(
           child: txtEm('Итого'),
         ),
-        txtEm('${widget.zkz.finalPrice} сом/час'),
+        txtEm('${zkz!.finalPrice} сом/час'),
       ]),
     );
-    if (widget.zkz.duration != null) {
+    if (zkz!.duration != null) {
       chldrn.add(const SizedBox(height: 5));
       chldrn.add(
         Row(children: [
           Expanded(
             child: txtEm('Время'),
           ),
-          txtEm(widget.zkz.durStr),
+          txtEm(zkz!.durStr),
         ]),
       );
       chldrn.add(const SizedBox(height: 10));
@@ -213,7 +212,7 @@ class _OrderDetailState extends State<OrderDetail> {
           Expanded(
             child: txtEm('Сумма'),
           ),
-          txtEm('${widget.zkz.sum} сом'),
+          txtEm('${zkz!.sum} сом'),
         ]),
       );
     }
@@ -224,27 +223,11 @@ class _OrderDetailState extends State<OrderDetail> {
   }
 
   Widget _acceptBtn() {
-    if (widget.zkz.statusId != 1) {
+    if (zkz!.statusId != 1) {
       return const SizedBox();
     }
     return Container(
-      child: MyWid.txtBtn('Принять', () async {
-        if (zctr.prof == null) {
-          errorAlert('Заполните профиль');
-        } else {
-          var res = await postAction('accept', {
-            'id': widget.zkz.id.toString(),
-            'zctg_id': widget.zkz.ctgId.toString()
-          });
-          if (res == 0) {
-            errorAlert('Произошла ошибка');
-          } else {
-            widget.zkz.statusId = res;
-            zctr.statusMap[widget.zkz.id] = res;
-            await Get.off(OrderStatus(widget.zkz));
-          }
-        }
-      }, shad: true),
+      child: MyWid.txtBtn('Принять', () => zctr.accept(zkz!), shad: true),
     );
     /* return Obx(() {
     }); */

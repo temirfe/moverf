@@ -139,12 +139,12 @@ Future<List> getOrders({String params = '', String forwho = 'zakaz'}) async {
   if (forwho == 'myOrders') {
     curPg = zctr.currentPageMy;
   }
-  var url = urlBase + 'zakazs?page=$curPg';
+  var url = urlBase + 'zakaz/list?page=$curPg';
   if (params != '') {
     url += '&$params';
   }
-  //cprint('request getOrders');
   var authkey = prefBox.get('authKey');
+  //cprint('request getOrders $url, $authkey');
   try {
     var response = await http.get(Uri.parse(url),
         headers: {HttpHeaders.authorizationHeader: 'Bearer $authkey'});
@@ -254,4 +254,44 @@ Future<int> getStatus(int id) async {
     cprint('getStatus error: $error');
   }
   return 0;
+}
+
+void postTest(Map params) async {
+  var url = urlBase + 'zakaz/test';
+  //var authkey = prefBox.get('authKey');
+  try {
+    //cprint('postAction $param');
+    var response = await http.post(Uri.parse(url), body: params);
+
+    var resp = json.decode(response.body);
+    if (response.statusCode == 200) {
+      cprint('json postTest resp: $resp');
+
+      //cprint('json postUser: $resp');
+    } else {
+      cprint('postTest -error status: ${response.statusCode}, body: $resp');
+    }
+  } catch (error) {
+    cprint('postTest error: $error');
+  }
+}
+
+void postLocation(Map params) async {
+  var url = urlBase + 'zakaz/location-stream';
+  //var authkey = prefBox.get('authKey');
+  try {
+    cprint('postLocation $params');
+    var response = await http.post(Uri.parse(url), body: params);
+
+    var resp = json.decode(response.body);
+    if (response.statusCode == 200) {
+      cprint('json postLocation resp: $resp');
+
+      //cprint('json postUser: $resp');
+    } else {
+      cprint('postLocation -error status: ${response.statusCode}, body: $resp');
+    }
+  } catch (error) {
+    cprint('postLocation error: $error');
+  }
 }

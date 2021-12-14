@@ -7,6 +7,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:get/get.dart';
 import 'package:mover/views/serviceman.dart';
+import 'package:mover/views/test_bg_loc.dart';
 import '/helpers/misc.dart';
 import 'controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
@@ -15,15 +16,16 @@ import 'views/my_order_list.dart';
 import 'views/socket_test.dart';
 import 'views/login_view.dart';
 import 'views/test.dart';
+import 'views/test_mrkranim.dart';
 
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+/* Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   cprint('Handling a background message: ${message.messageId}');
-}
+} */
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  //FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
   await Hive.initFlutter();
   await Hive.openBox('sharedPref');
   runApp(const MyApp());
@@ -57,8 +59,6 @@ class MyApp extends StatelessWidget {
       initialRoute: iniPage,
       initialBinding: BindingsBuilder(() => {
             Get.put(ZakazController()),
-            //Get.put(MapController()),
-            //Get.put(MessageController()),
           }),
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -91,7 +91,9 @@ class Router {
     ),
     GetPage(
       name: '/test',
-      page: () => Test(),
+      //page: () => Test(),
+      //page: () => const BgLocTest(),
+      page: () => SimpleMarkerAnimationExample(),
     ),
     GetPage(
       name: '/login',

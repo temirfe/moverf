@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 //import 'package:hive_flutter/hive_flutter.dart';
 import 'package:get/get.dart';
 import 'package:mover/models/zakaz_model.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:flutter_animarker/flutter_map_marker_animation.dart';
 import '/helpers/misc.dart';
 import '/controllers/zakaz_controller.dart';
 import '/helpers/styles.dart';
@@ -11,10 +13,13 @@ import '/widgets/map.dart';
 import '/widgets/my_widgets.dart';
 import '../helpers/api_req.dart';
 import 'order_detail.dart';
+import 'dart:async';
+
+const kMarkerId = MarkerId('MarkerId1');
 
 class OrderStatus extends StatefulWidget {
-  const OrderStatus(this.zkz, {Key? key}) : super(key: key);
-  final Zakaz zkz;
+  const OrderStatus(this.zakazId, {Key? key}) : super(key: key);
+  final int zakazId;
 
   @override
   State<OrderStatus> createState() => _OrderStatusState();
@@ -22,18 +27,30 @@ class OrderStatus extends StatefulWidget {
 
 class _OrderStatusState extends State<OrderStatus> {
   final ZakazController zctr = Get.find<ZakazController>();
-  final MyMap mymap = MyMap();
   final EdgeInsets pad =
       const EdgeInsets.symmetric(horizontal: 16, vertical: 10);
+  Zakaz? zkz;
+  var iter = 0;
+  Timer? perdir;
 
   @override
   void initState() {
     super.initState();
+    cprint('orderStatus initState');
+    zkz = zctr.zakazMap[widget.zakazId];
+    zctr.mapPolylines.clear();
+    //zctr.pointsMap.clear();
+    //zctr.markers.clear();
+    zctr.markersMap.clear();
     //initMap();
     //zctr.listenLocation();
-    if (widget.zkz.statusId == Zakaz.statusInProgress &&
-        zctr.durTimer == null) {
-      zctr.durationTimer(widget.zkz.start!);
+    /* zctr.markersMap[kMarkerId] = const Marker(
+      markerId: kMarkerId,
+      position: LatLng(42.881377, 74.583476),
+    );
+ */
+    if (zkz!.statusId == Zakaz.statusInProgress && zctr.durTimer == null) {
+      zctr.durationTimer(zkz!.start!);
     }
   }
 
@@ -45,9 +62,9 @@ class _OrderStatusState extends State<OrderStatus> {
       'lng': zctr.lastLng
     };
     zctr.pointsMap[1] = {
-      'title': widget.zkz.address,
-      'lat': widget.zkz.lat,
-      'lng': widget.zkz.lng
+      'title': zkz!.address,
+      'lat': zkz!.lat,
+      'lng': zkz!.lng
     };
     zctr.createMarkers(showFirst: false);
     zctr.createPolylines(color: purpleMain);
@@ -55,52 +72,28 @@ class _OrderStatusState extends State<OrderStatus> {
 
   @override
   Widget build(BuildContext context) {
+    cprint('orderStatus build');
     return Scaffold(
       //backgroundColor: Colors.yellow,
-      body: myBody(),
+      body: Stack(
+        children: [
+          SizedBox(
+            height: Get.height * 0.9,
+            child: MyMap(),
+            //child: const SizedBox(),
+            //color: Colors.grey,
+          ),
+          DraggableScrollableSheet(
+              initialChildSize: .3,
+              minChildSize: .12,
+              maxChildSize: .5,
+              builder:
+                  (BuildContext context, ScrollController scrollController) {
+                return scrollViewContent(scrollController);
+              })
+        ],
+      ),
     );
-  }
-
-  Widget myBody() {
-    return Stack(
-      children: [
-        SizedBox(
-          height: Get.height * 0.9,
-          //child: mymap.gmapX(),
-          child: const SizedBox(),
-          //color: Colors.grey,
-        ),
-        dss()
-        /*  Align(
-            alignment: Alignment.bottomCenter,
-            child: SizedBox(
-                height: Get.height * 0.35,
-                child: ListView(
-                  padding: const EdgeInsets.only(top: 0),
-                  children: bodyList(),
-                ))), */
-        /* Align(
-            alignment: Alignment.bottomLeft,
-            child: TextButton(
-              child: const Text('Отменить заказ',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.normal,
-                      color: Colors.grey)),
-              onPressed: () {},
-            )), */
-      ],
-    );
-  }
-
-  Widget dss() {
-    return DraggableScrollableSheet(
-        initialChildSize: .3,
-        minChildSize: .12,
-        maxChildSize: .5,
-        builder: (BuildContext context, ScrollController scrollController) {
-          return scrollViewContent(scrollController);
-        });
   }
 
   Widget scrollViewContent(ScrollController sc) {
@@ -147,10 +140,10 @@ class _OrderStatusState extends State<OrderStatus> {
   List<Widget> bodyList() {
     var list = <Widget>[
       ListTile(
-        title: Text(widget.zkz.longTitle),
+        title: Text(zkz!.longTitle),
         trailing: const Icon(Icons.arrow_right),
         onTap: () {
-          Get.to(OrderDetail(widget.zkz));
+          Get.to(OrderDetail(zkz!.id));
         },
       ),
       const Divider(height: 8),
@@ -167,9 +160,9 @@ class _OrderStatusState extends State<OrderStatus> {
 
   Widget statuses() {
     return Obx(() {
-      var statId = widget.zkz.statusId;
-      if (zctr.statusMap.containsKey(widget.zkz.id)) {
-        statId = zctr.statusMap[widget.zkz.id]!;
+      var statId = zkz!.statusId;
+      if (zctr.statusMap.containsKey(zkz!.id)) {
+        statId = zctr.statusMap[zkz!.id]!;
       }
 
       return Container(
@@ -188,17 +181,17 @@ class _OrderStatusState extends State<OrderStatus> {
 
   Widget sum() {
     return Obx(() {
-      var statId = widget.zkz.statusId;
-      if (zctr.statusMap.containsKey(widget.zkz.id)) {
-        statId = zctr.statusMap[widget.zkz.id]!;
+      var statId = zkz!.statusId;
+      if (zctr.statusMap.containsKey(zkz!.id)) {
+        statId = zctr.statusMap[zkz!.id]!;
       }
-      if (statId > Zakaz.statusInProgress && widget.zkz.sum != 0) {
+      if (statId > Zakaz.statusInProgress && zkz!.sum != 0) {
         return Container(
           padding: const EdgeInsets.only(left: 16, bottom: 16),
           child: Row(children: [
             txt2('Сумма:'),
             const SizedBox(width: 16),
-            Text('${widget.zkz.sum} сом')
+            Text('${zkz!.sum} сом')
           ]),
         );
       }
@@ -208,9 +201,9 @@ class _OrderStatusState extends State<OrderStatus> {
 
   Widget contact() {
     return Obx(() {
-      var statId = widget.zkz.statusId;
-      if (zctr.statusMap.containsKey(widget.zkz.id)) {
-        statId = zctr.statusMap[widget.zkz.id]!;
+      var statId = zkz!.statusId;
+      if (zctr.statusMap.containsKey(zkz!.id)) {
+        statId = zctr.statusMap[zkz!.id]!;
       }
       if (statId > Zakaz.statusInProgress) {
         return const SizedBox();
@@ -259,9 +252,9 @@ class _OrderStatusState extends State<OrderStatus> {
     return Obx(() {
       Widget ret = const SizedBox();
 
-      var statId = widget.zkz.statusId;
-      if (zctr.statusMap.containsKey(widget.zkz.id)) {
-        statId = zctr.statusMap[widget.zkz.id]!;
+      var statId = zkz!.statusId;
+      if (zctr.statusMap.containsKey(zkz!.id)) {
+        statId = zctr.statusMap[zkz!.id]!;
       }
 
       switch (statId) {
@@ -288,19 +281,8 @@ class _OrderStatusState extends State<OrderStatus> {
   Widget approachBtn() {
     return Obx(() {
       Widget contnt = const Text('Выезжаю');
-      Function onPresd = () async {
-        //zctr.periodic();
-        zctr.isLoadingMap['approach'] = true;
-        var res = await postAction('approach', {
-          'id': widget.zkz.id.toString(),
-          'zctg_id': widget.zkz.ctgId.toString()
-        });
-        if (res is int && res == 0) {
-          widget.zkz.approaching();
-        } else {
-          errorAlert('Произошла ошибка');
-          zctr.isLoadingMap['start'] = false;
-        }
+      Function onPresd = () {
+        zctr.approach(zkz!);
       };
 
       if (zctr.isLoadingMap.containsKey('approach') &&
@@ -315,19 +297,8 @@ class _OrderStatusState extends State<OrderStatus> {
   Widget startBtn() {
     return Obx(() {
       Widget contnt = const Text('Начать отчёт времени');
-      Function onPresd = () async {
-        //zctr.periodic();
-        zctr.isLoadingMap['start'] = true;
-        var res = await postAction('start', {
-          'id': widget.zkz.id.toString(),
-          'zctg_id': widget.zkz.ctgId.toString()
-        });
-        if (res is int && res == 0) {
-          widget.zkz.started();
-        } else {
-          errorAlert('Произошла ошибка');
-          zctr.isLoadingMap['start'] = false;
-        }
+      Function onPresd = () {
+        zctr.start(zkz!);
       };
 
       if (zctr.isLoadingMap.containsKey('start') &&
@@ -342,19 +313,8 @@ class _OrderStatusState extends State<OrderStatus> {
   Widget doneBtn() {
     return Obx(() {
       Widget contnt = const Text('Завершить');
-      Function onPresd = () async {
-        //zctr.periodic();
-        zctr.isLoadingMap['finish'] = true;
-        var res = await postAction('finish', {
-          'id': widget.zkz.id.toString(),
-          'zctg_id': widget.zkz.ctgId.toString()
-        });
-        if (res is int && res == 0) {
-          widget.zkz.done();
-        } else {
-          errorAlert('Произошла ошибка');
-          zctr.isLoadingMap['finish'] = false;
-        }
+      Function onPresd = () {
+        zctr.finish(zkz!);
       };
 
       if (zctr.isLoadingMap.containsKey('finish') &&
@@ -368,9 +328,9 @@ class _OrderStatusState extends State<OrderStatus> {
 
   Widget cancelBtn() {
     return Obx(() {
-      var statId = widget.zkz.statusId;
-      if (zctr.statusMap.containsKey(widget.zkz.id)) {
-        statId = zctr.statusMap[widget.zkz.id]!;
+      var statId = zkz!.statusId;
+      if (zctr.statusMap.containsKey(zkz!.id)) {
+        statId = zctr.statusMap[zkz!.id]!;
       }
       if (statId > Zakaz.statusApproaching) {
         return const SizedBox();
@@ -381,31 +341,22 @@ class _OrderStatusState extends State<OrderStatus> {
                 fontSize: 12,
                 fontWeight: FontWeight.normal,
                 color: Colors.grey)),
-        onPressed: () async {
-          var res = await postAction('cancel', {
-            'id': widget.zkz.id.toString(),
-            'zctg_id': widget.zkz.ctgId.toString()
-          });
-          if (res is int && res != 0) {
-            widget.zkz.cancel(res);
-            Get.back();
-          } else {
-            errorAlert('Произошла ошибка');
-          }
+        onPressed: () {
+          zctr.cancel(zkz!);
         },
       );
     });
   }
 
   Widget timer() {
-    if (widget.zkz.statusId != Zakaz.statusInProgress) {
+    if (zkz!.statusId != Zakaz.statusInProgress) {
       return const SizedBox();
     }
     var duration = zctr.durTimerValue.value;
     var sec = (duration % 60).toString().padLeft(2, '0');
     var minute = '00';
     if (duration >= 60) {
-      minute = (duration / 60).floor().toString().padLeft(2, '0');
+      minute = ((duration % 3600) / 60).floor().toString().padLeft(2, '0');
     }
     var hour = '00';
     if (duration >= 3600) {
@@ -416,10 +367,10 @@ class _OrderStatusState extends State<OrderStatus> {
   }
 
   Widget when() {
-    if (widget.zkz.statusId != Zakaz.statusAccepted) {
+    if (zkz!.statusId != Zakaz.statusAccepted) {
       return const SizedBox();
     }
-    return Text('Начать ${widget.zkz.startDate}');
+    return Text('Начать ${zkz!.startDate}');
   }
 
   Widget myTile(String lbl, String text, {String tale = ''}) {

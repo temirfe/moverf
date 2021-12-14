@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '/views/order_detail.dart';
 //import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:flutter_animarker/widgets/animarker.dart';
+import 'package:flutter_animarker/flutter_map_marker_animation.dart';
+
 //import 'package:geocoding/geocoding.dart';
 //import 'package:gmf/helpers/styles.dart';
 //import 'package:gmf/helpers/alerts.dart';
@@ -12,67 +14,40 @@ import '/controllers/zakaz_controller.dart';
 //import '/widgets/myWidgets.dart';
 import '/widgets/mapPin.dart';
 
-class MyMap {
-  final ZakazController zctr = Get.find<ZakazController>();
-  MapPickerController mpc = MapPickerController();
-  LatLng? movedTo; //registers map's last stoped coords for locToAddr()
+class MyMap extends StatelessWidget {
+  //final ZakazController zctr = Get.find<ZakazController>();
+  final MapPickerController mpc = MapPickerController();
+  final mapCmpl = Completer<GoogleMapController>();
+  // LatLng? movedTo; //registers map's last stoped coords for locToAddr()
 
-  final Map<MarkerId, Marker> markersMap = <MarkerId, Marker>{};
-  final Set<Marker> markers = {};
-  late final PolylinePoints polylinePoints;
-  final List<LatLng> polylineCoordinates = [];
+  MyMap({Key? key}) : super(key: key);
 
-  Widget gmapX() {
-    return Obx(() {
-      cprint('gmapGet build gmap');
-
-      var pllne = Set<Polyline>.of(zctr.mapPolylines.values);
-      //return fmap(pllne);
-      return gmap(pllne);
-    });
-  }
-
-  Widget fmap(Set<Polyline> pllne) {
-    return FutureBuilder(
-        future: Future.delayed(
-            const Duration(
-              milliseconds: 300,
-            ),
-            () => gmap(pllne)),
-        builder: (BuildContext context, AsyncSnapshot<GoogleMap> snap) {
-          if (snap.hasData) {
-            return snap.data!;
-          }
-          return const SizedBox();
-        });
-  }
-
-  GoogleMap gmap(Set<Polyline> pllne) {
-    //cprint('center ${zctr.camPos!.target.latitude}');
-    cprint('build gmap');
-    /* Future.delayed(const Duration(milliseconds: 1500), () {
-      cprint('delayed run checkCameraLocation');
-      zctr.checkCameraLocation();
-    }); */
-
-    var mrkrs = zctr.markers;
-    //var pllne = Set<Polyline>.of(zctr.mapPolylines.values);
-
-    return GoogleMap(
-      initialCameraPosition: zctr.camPos,
-      myLocationEnabled: true,
-      myLocationButtonEnabled: false,
-      zoomControlsEnabled: false,
-      onMapCreated: (GoogleMapController c) {
-        cprint('onMapCreated');
-        if (!zctr.mapCmpl.isCompleted) {
-          zctr.mapCmpl.complete(c);
-        }
-        zctr.gmctr = c;
-        zctr.checkCameraLocation();
+  @override
+  Widget build(BuildContext context) {
+    cprint('map build');
+    return GetBuilder<ZakazController>(
+      builder: (zctr) {
+        cprint('map getbuild');
+        return Animarker(
+          mapId: mapCmpl.future.then<int>((value) => value.mapId),
+          duration: const Duration(milliseconds: 6000),
+          markers: zctr.markersMap.values.toSet(),
+          child: GoogleMap(
+            initialCameraPosition: zctr.camPos,
+            myLocationEnabled: true,
+            myLocationButtonEnabled: false,
+            zoomControlsEnabled: false,
+            onMapCreated: (GoogleMapController c) {
+              cprint('onMapCreated');
+              mapCmpl.complete(c);
+              zctr.gmctr = c;
+              zctr.checkCameraLocation();
+            },
+            //markers: zctr.markers,
+            polylines: Set<Polyline>.of(zctr.mapPolylines.values),
+          ),
+        );
       },
-      markers: mrkrs,
-      polylines: pllne,
     );
   }
 }

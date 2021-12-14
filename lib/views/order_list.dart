@@ -115,10 +115,11 @@ by new request.
 
   Widget tile(Map<String, dynamic> order) {
     var zakaz = Zakaz.fromJson(order);
+    zctr.zakazMap[zakaz.id] = zakaz;
 
     return InkWell(
       onTap: () {
-        Get.to(OrderDetail(zakaz));
+        Get.to(OrderDetail(zakaz.id));
         //Get.to(OrderStatus(zakaz));
       },
       child: Container(

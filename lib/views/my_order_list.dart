@@ -107,13 +107,14 @@ class _OrderListState extends State<MyOrderList> {
 
   Widget tile(Map<String, dynamic> order) {
     var zakaz = Zakaz.fromJson(order);
+    zctr.zakazMap[zakaz.id] = zakaz;
 
     return InkWell(
       onTap: () {
         if (zakaz.statusId > Zakaz.statusInProgress) {
-          Get.to(OrderDetail(zakaz));
+          Get.to(OrderDetail(zakaz.id));
         } else {
-          Get.to(OrderStatus(zakaz));
+          Get.to(OrderStatus(zakaz.id));
         }
       },
       child: Container(

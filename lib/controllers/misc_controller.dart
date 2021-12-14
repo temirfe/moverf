@@ -39,6 +39,7 @@ class MiscController extends BaseController {
   var profileFormIsDirty = false.obs;
   Serviceman? prof;
   var isSubmittingProfile = false.obs;
+  Timer? peri;
 
   @override
   void onInit() {
@@ -257,6 +258,9 @@ class MiscController extends BaseController {
     }
     if (durTimer != null) {
       durTimer!.cancel();
+    }
+    if (peri != null) {
+      peri!.cancel();
     }
   }
 
