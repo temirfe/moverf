@@ -277,7 +277,7 @@ void postTest(Map params) async {
 }
 
 void postLocation(Map params) async {
-  var url = urlBase + 'zakaz/location-stream';
+  var url = urlBase + 'zakaz/locstream';
   //var authkey = prefBox.get('authKey');
   try {
     cprint('postLocation $params');

@@ -49,8 +49,13 @@ class _OrderStatusState extends State<OrderStatus> {
       position: LatLng(42.881377, 74.583476),
     );
  */
-    if (zkz!.statusId == Zakaz.statusInProgress && zctr.durTimer == null) {
-      zctr.durationTimer(zkz!.start!);
+    if (zkz != null) {
+      if (zkz!.statusId == Zakaz.statusInProgress && zctr.durTimer == null) {
+        zctr.durationTimer(zkz!.start!);
+      }
+      if (zkz!.statusId == Zakaz.statusApproaching) {
+        zctr.bgLocListen(zkz!.id, zkz!.userId);
+      }
     }
   }
 
